@@ -185,6 +185,44 @@ TEMPLATES: dict[str, Template] = {
             'A word shared with someone close to you would mean the world.'
         ),
     ),
+    # ---------------------------------------------------------------------
+    # Appointment templates
+    # ---------------------------------------------------------------------
+    'appointment_scheduled': Template(
+        key='appointment_scheduled',
+        email_subject='Your Versuitality appointment is booked',
+        email_body=(
+            'Dear {client_first_name},\n\n'
+            'Your {appointment_kind} appointment is booked for '
+            '{appointment_when}.\n\n'
+            "We will send you a reminder a couple of hours before so you don't "
+            'miss it.\n\n'
+            'Warmly,\n'
+            'The Versuitality team'
+        ),
+        whatsapp_body=(
+            '✦ *Versuitality*\n\n'
+            'Your {appointment_kind} appointment is booked for '
+            '{appointment_when}. See you then.'
+        ),
+    ),
+    'appointment_reminder': Template(
+        key='appointment_reminder',
+        email_subject='Reminder · Versuitality appointment in 2 hours',
+        email_body=(
+            'Dear {client_first_name},\n\n'
+            'A friendly reminder that your {appointment_kind} appointment is '
+            'today at {appointment_time}.\n\n'
+            'We look forward to seeing you at the store.\n\n'
+            'Warmly,\n'
+            'The Versuitality team'
+        ),
+        whatsapp_body=(
+            '✦ *Versuitality*\n\n'
+            'Quick reminder, {client_first_name} — your {appointment_kind} '
+            'appointment is today at {appointment_time}. See you soon.'
+        ),
+    ),
 }
 
 

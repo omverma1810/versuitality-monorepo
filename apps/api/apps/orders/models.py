@@ -162,6 +162,16 @@ class OrderLineItem(models.Model):
     )
     garment_type = models.CharField(max_length=24)
     fabric_description = models.CharField(max_length=200, blank=True)
+    fabric = models.ForeignKey(
+        'inventory.Fabric',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='order_line_items',
+    )
+    meters_used = models.DecimalField(
+        max_digits=8, decimal_places=2, default=Decimal('0')
+    )
     quantity = models.PositiveSmallIntegerField(default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
     customization_notes = models.TextField(blank=True)

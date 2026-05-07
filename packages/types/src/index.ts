@@ -420,3 +420,129 @@ export interface NotificationLogEntry {
   created_at: string;
   sent_at: string | null;
 }
+
+// ---------------------------------------------------------------------------
+// Inventory
+// ---------------------------------------------------------------------------
+
+export type FabricPattern =
+  | 'solid'
+  | 'stripe'
+  | 'check'
+  | 'print'
+  | 'textured'
+  | 'other';
+
+export const FABRIC_PATTERN_LABELS: Record<FabricPattern, string> = {
+  solid: 'Solid',
+  stripe: 'Stripe',
+  check: 'Check',
+  print: 'Print',
+  textured: 'Textured',
+  other: 'Other',
+};
+
+export interface Fabric {
+  id: string;
+  code: string;
+  name: string;
+  supplier?: string;
+  color?: string;
+  pattern: FabricPattern;
+  fabric_type?: string;
+  quantity_meters: string;
+  low_stock_threshold: string;
+  cost_per_meter: string;
+  price_per_meter: string;
+  notes?: string;
+  image_url?: string;
+  is_active: boolean;
+  is_low_stock: boolean;
+  stock_value: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type UsageKind =
+  | 'order'
+  | 'restock'
+  | 'wastage'
+  | 'sample'
+  | 'adjustment';
+
+export const USAGE_KIND_LABELS: Record<UsageKind, string> = {
+  order: 'Order consumption',
+  restock: 'Restock',
+  wastage: 'Wastage',
+  sample: 'Sample',
+  adjustment: 'Adjustment',
+};
+
+export interface FabricUsageEntry {
+  id: string;
+  fabric: string;
+  fabric_code: string;
+  fabric_name: string;
+  order: string | null;
+  order_code: string | null;
+  line_item: string | null;
+  kind: UsageKind;
+  delta_meters: string;
+  notes: string;
+  actor: string | null;
+  actor_name: string;
+  created_at: string;
+}
+
+// ---------------------------------------------------------------------------
+// Appointments
+// ---------------------------------------------------------------------------
+
+export type AppointmentKind =
+  | 'measurement'
+  | 'trial'
+  | 'consultation'
+  | 'delivery'
+  | 'other';
+
+export const APPOINTMENT_KIND_LABELS: Record<AppointmentKind, string> = {
+  measurement: 'Measurement',
+  trial: 'Trial fitting',
+  consultation: 'Consultation',
+  delivery: 'Delivery / pickup',
+  other: 'Other',
+};
+
+export type AppointmentStatus =
+  | 'scheduled'
+  | 'completed'
+  | 'cancelled'
+  | 'no_show';
+
+export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
+  scheduled: 'Scheduled',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  no_show: 'No-show',
+};
+
+export type NotifyVia = 'none' | 'email' | 'whatsapp' | 'both';
+
+export interface Appointment {
+  id: string;
+  client: string | null;
+  client_code: string | null;
+  full_name: string;
+  mobile: string;
+  email: string;
+  scheduled_at: string;
+  duration_minutes: number;
+  kind: AppointmentKind;
+  status: AppointmentStatus;
+  notify_via: NotifyVia;
+  reminder_sent_at: string | null;
+  notes: string;
+  is_upcoming: boolean;
+  created_at: string;
+  updated_at: string;
+}

@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'apps.realtime',
     'apps.qa',
     'apps.notifications',
+    'apps.inventory',
+    'apps.appointments',
 ]
 
 MIDDLEWARE = [

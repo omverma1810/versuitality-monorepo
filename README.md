@@ -102,7 +102,7 @@ python manage.py runserver 0.0.0.0:8000
 | 8 | Admin analytics |
 | 9 | Polish + production cut |
 
-Currently shipping: **Phase 6** (Notifications — Email + WhatsApp pipeline).
+Currently shipping: **Phase 7** (Inventory + appointments).
 
 ## Phase 1 — what's live
 
@@ -284,4 +284,63 @@ Currently shipping: **Phase 6** (Notifications — Email + WhatsApp pipeline).
   the provider message id / error. Refetches automatically after each
   status transition so the just-fired email and WhatsApp messages
   appear immediately.
+
+## Phase 7 — what's live
+
+- New `apps.inventory` Django app: `Fabric` (auto `VS-FB-XXXXX` codes,
+  supplier, color, pattern, fabric_type, quantity in metres,
+  `low_stock_threshold`, cost & price per metre, image url, soft delete
+  via `is_active`) and `FabricUsage` — a **signed-delta ledger** so the
+  running sum equals the cached `quantity_meters`. Movements happen
+  through `apps.inventory.services.adjust_stock`, which holds a
+  `select_for_update` row-lock to prevent concurrent order creations
+  from racing on the same bolt.
+- `OrderLineItem` gained `fabric` (FK) + `meters_used`. When a line
+  carries both, order creation deducts stock + writes a `FabricUsage`
+  ledger entry inside the same atomic transaction. Insufficient stock
+  rolls the entire order back with a clean error.
+- New `apps.appointments` Django app: `Appointment` model with snapshot
+  contact fields (so prospects without CRM records work too), kind
+  (Measurement / Trial / Consultation / Delivery / Other), status,
+  `notify_via` preference, `reminder_sent_at` timestamp, scheduled
+  duration, and notes. Indexed on `(scheduled_at)` and
+  `(status, scheduled_at)` for fast queue lookups.
+- Appointment endpoints: full CRUD on `/api/appointments/`,
+  `GET /api/appointments/today/` for the dashboard widget,
+  `POST /api/appointments/<id>/transition/` (complete / cancel / no-show
+  with optional timestamped note appending).
+- Two new notification templates — `appointment_scheduled` (fires on
+  create) and `appointment_reminder` (fires from the cron). The
+  reminder pipeline is implemented as
+  `apps.appointments.services.send_due_reminders` and a
+  `python manage.py send_appointment_reminders --lead 120` management
+  command — idempotent, marks `reminder_sent_at` so re-runs don't double
+  fire. Hook to cron when SendGrid + Twilio creds land.
+- Inventory endpoints: full CRUD on `/api/fabrics/`,
+  `POST /<id>/adjust/` (signed delta + kind + note), `GET /<id>/usage/`,
+  `GET /api/fabrics/low_stock/`, plus a read-only `/api/fabric-usage/`
+  for cross-fabric audits.
+- **Frontend**:
+  - `/inventory` list — KPIs (active fabrics, total stock, stock value,
+    low-stock count), search, low-stock filter chip, glass cards that
+    glow red at the border when below threshold.
+  - `/inventory/[id]` — header KVs, **inline stock-movement form** with
+    Stock-In / Stock-Out buttons + kind picker + note, full ledger view
+    with green/red rows showing every prior movement and order
+    cross-link.
+  - `/inventory/new` — three-section form (identity, stock & pricing,
+    notes & image) with chip-style pattern picker.
+  - `/appointments` — date-grouped list with status pills, quick
+    Complete/Cancel buttons, filter chips (Upcoming / Today / All /
+    Completed / Cancelled).
+  - `/appointments/new` — pick an existing client via `ClientPicker` or
+    enter prospect details; pick kind, time, duration, reminder
+    preference; saves and routes back to the list.
+  - **Order new flow** gains a fabric picker + metres input on every
+    line — disabled until a fabric is selected, deducts on save.
+  - **Dashboard** gets two new widgets when relevant: today's
+    appointments (top 5, with kind + time + mobile) and low-stock alerts
+    (top 5, with current quantity + threshold). Both auto-hide when
+    empty.
+  - Sidebar Inventory + Appointments entries are now always live.
 

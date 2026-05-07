@@ -23,12 +23,14 @@ import { useAuthGate } from '@/hooks/useAuthGate';
 import { ApiError } from '@/lib/api';
 import { getClient } from '@/lib/clients';
 import { listMeasurements } from '@/lib/measurements';
+import { listFabrics } from '@/lib/inventory';
 import { createOrder } from '@/lib/orders';
 import { cn } from '@/lib/utils';
 import {
   GARMENT_LABELS,
   ORDER_TYPE_LABELS,
   type ClientSummary,
+  type Fabric,
   type GarmentType,
   type MeasurementSet,
   type OrderType,
@@ -44,6 +46,8 @@ const STEPS = [
 interface DraftLine {
   garment_type: GarmentType;
   fabric_description: string;
+  fabric_id: string | null;
+  meters_used: string;
   quantity: number;
   unit_price: string;
   customization_notes: string;
@@ -52,6 +56,8 @@ interface DraftLine {
 const EMPTY_LINE: DraftLine = {
   garment_type: 'shirt',
   fabric_description: '',
+  fabric_id: null,
+  meters_used: '',
   quantity: 1,
   unit_price: '',
   customization_notes: '',
@@ -84,6 +90,14 @@ export default function NewOrderPage() {
   const [notes, setNotes] = useState('');
 
   const [lines, setLines] = useState<DraftLine[]>([{ ...EMPTY_LINE }]);
+  const [fabrics, setFabrics] = useState<Fabric[]>([]);
+
+  useEffect(() => {
+    if (!ready) return;
+    listFabrics({ active: true })
+      .then((d) => setFabrics(d.results))
+      .catch(() => undefined);
+  }, [ready]);
 
   const [measurements, setMeasurements] = useState<MeasurementSet[]>([]);
   const [measurementId, setMeasurementId] = useState<string | null>(null);
@@ -160,6 +174,8 @@ export default function NewOrderPage() {
         line_items: lines.map((l, i) => ({
           garment_type: l.garment_type,
           fabric_description: l.fabric_description,
+          fabric: l.fabric_id ?? undefined,
+          meters_used: l.meters_used ? Number(l.meters_used) : 0,
           quantity: l.quantity,
           unit_price: l.unit_price || 0,
           customization_notes: l.customization_notes,
@@ -383,6 +399,66 @@ export default function NewOrderPage() {
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
+
+                        {/* Inventory pick — links the line to a tracked fabric and deducts stock on save. */}
+                        <div className="grid gap-3 md:grid-cols-[1fr_180px]">
+                          <select
+                            value={line.fabric_id ?? ''}
+                            onChange={(e) =>
+                              setLines((prev) =>
+                                prev.map((l, i) =>
+                                  i === idx
+                                    ? {
+                                        ...l,
+                                        fabric_id: e.target.value || null,
+                                        meters_used:
+                                          e.target.value ? l.meters_used : '',
+                                      }
+                                    : l,
+                                ),
+                              )
+                            }
+                            className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm outline-none focus:border-gold-500/60"
+                          >
+                            <option value="" className="bg-navy-700">
+                              No tracked fabric (description above only)
+                            </option>
+                            {fabrics.map((f) => (
+                              <option
+                                key={f.id}
+                                value={f.id}
+                                className="bg-navy-700"
+                              >
+                                {f.code} · {f.name} ·{' '}
+                                {Number(f.quantity_meters).toFixed(1)} m in stock
+                              </option>
+                            ))}
+                          </select>
+                          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
+                            <span className="text-[10px] uppercase tracking-wider text-foreground/40">
+                              Metres
+                            </span>
+                            <input
+                              type="number"
+                              step="0.1"
+                              min="0"
+                              disabled={!line.fabric_id}
+                              value={line.meters_used}
+                              onChange={(e) =>
+                                setLines((prev) =>
+                                  prev.map((l, i) =>
+                                    i === idx
+                                      ? { ...l, meters_used: e.target.value }
+                                      : l,
+                                  ),
+                                )
+                              }
+                              placeholder="—"
+                              className="w-full bg-transparent text-sm tabular-nums outline-none disabled:opacity-50"
+                            />
+                          </div>
+                        </div>
+
                         <textarea
                           rows={2}
                           value={line.customization_notes}

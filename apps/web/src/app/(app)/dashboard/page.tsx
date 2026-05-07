@@ -2,19 +2,34 @@
 
 import { motion } from 'framer-motion';
 import {
+  AlertTriangle,
   ArrowUpRight,
+  Boxes,
+  CalendarDays,
+  Clock,
+  Phone,
   Receipt,
   Scissors,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
 import { RoleBadge } from '@/components/ui/role-badge';
 import { useOrderBoardSocket } from '@/hooks/useOrderBoardSocket';
+import { fetchTodayAppointments } from '@/lib/appointments';
+import { listLowStock } from '@/lib/inventory';
 import { getOrderStats } from '@/lib/orders';
 import type { OrderBoardEvent } from '@/lib/socket';
-import { ROLE_DESCRIPTIONS, type OrderStats, type Role } from '@versuitality/types';
+import {
+  APPOINTMENT_KIND_LABELS,
+  ROLE_DESCRIPTIONS,
+  type Appointment,
+  type Fabric,
+  type OrderStats,
+  type Role,
+} from '@versuitality/types';
 import { useAuthStore } from '@/store/authStore';
 
 const ROLE_NEXT_STEPS: Record<Role, string[]> = {
@@ -85,10 +100,18 @@ function LiveTile({
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const [stats, setStats] = useState<OrderStats | null>(null);
+  const [todayAppts, setTodayAppts] = useState<Appointment[]>([]);
+  const [lowStock, setLowStock] = useState<Fabric[]>([]);
 
   const refresh = useCallback(() => {
     getOrderStats()
       .then(setStats)
+      .catch(() => undefined);
+    fetchTodayAppointments()
+      .then(setTodayAppts)
+      .catch(() => undefined);
+    listLowStock()
+      .then(setLowStock)
       .catch(() => undefined);
   }, []);
 
@@ -174,6 +197,110 @@ export default function DashboardPage() {
           value={stats?.delivered_today ?? 0}
         />
       </section>
+
+      {/* Today's appointments + low stock — both hide cleanly when empty so
+          the dashboard stays calm for new shops. */}
+      {(todayAppts.length > 0 || lowStock.length > 0) && (
+        <section className="grid gap-4 lg:grid-cols-2">
+          {todayAppts.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-panel p-5"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-gold-400" />
+                  <h2 className="font-display text-lg">Today's appointments</h2>
+                </div>
+                <Link
+                  href="/appointments"
+                  className="text-xs text-gold-300 hover:underline"
+                >
+                  View all →
+                </Link>
+              </div>
+              <ul className="space-y-2">
+                {todayAppts.slice(0, 5).map((a) => (
+                  <li
+                    key={a.id}
+                    className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-2.5 text-sm"
+                  >
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold-500/10 text-gold-300">
+                      <Clock className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate">
+                        <span className="font-mono tabular-nums">
+                          {new Date(a.scheduled_at).toLocaleTimeString(undefined, {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>{' '}
+                        · {a.full_name}
+                      </p>
+                      <p className="truncate text-xs text-foreground/50">
+                        {APPOINTMENT_KIND_LABELS[a.kind]}
+                        {a.mobile && (
+                          <>
+                            {' · '}
+                            <Phone className="inline h-3 w-3" /> {a.mobile}
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          )}
+
+          {lowStock.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-panel p-5"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-red-300" />
+                  <h2 className="font-display text-lg">Low stock</h2>
+                </div>
+                <Link
+                  href="/inventory?low=1"
+                  className="text-xs text-gold-300 hover:underline"
+                >
+                  View inventory →
+                </Link>
+              </div>
+              <ul className="space-y-2">
+                {lowStock.slice(0, 5).map((f) => (
+                  <li key={f.id}>
+                    <Link
+                      href={`/inventory/${f.id}`}
+                      className="flex items-center gap-3 rounded-xl border border-status-rejected/20 bg-status-rejected/5 p-2.5 text-sm transition-colors hover:border-status-rejected/40"
+                    >
+                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-status-rejected/15 text-red-200">
+                        <Boxes className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{f.name}</p>
+                        <p className="truncate text-xs text-foreground/50">
+                          {f.code} · threshold{' '}
+                          {Number(f.low_stock_threshold).toFixed(1)} m
+                        </p>
+                      </div>
+                      <span className="font-mono text-sm text-red-200 tabular-nums">
+                        {Number(f.quantity_meters).toFixed(1)} m
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          )}
+        </section>
+      )}
 
       <section className="grid gap-6 lg:grid-cols-3">
         <motion.div

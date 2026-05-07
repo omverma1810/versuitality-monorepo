@@ -58,7 +58,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: 'Appointments',
         icon: CalendarDays,
         roles: ['admin', 'staff'],
-        phase: 7,
+        phase: 1, // live as of Phase 7
       },
     ],
   },
@@ -70,7 +70,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: 'Inventory',
         icon: Boxes,
         roles: ['admin', 'staff', 'master'],
-        phase: 7,
+        phase: 1, // live as of Phase 7
       },
     ],
   },

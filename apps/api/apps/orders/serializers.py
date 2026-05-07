@@ -23,19 +23,26 @@ class OrderLineItemSerializer(serializers.ModelSerializer):
         max_digits=10, decimal_places=2, read_only=True
     )
 
+    fabric_code = serializers.CharField(source='fabric.code', read_only=True)
+    fabric_name = serializers.CharField(source='fabric.name', read_only=True)
+
     class Meta:
         model = OrderLineItem
         fields = (
             'id',
             'garment_type',
             'fabric_description',
+            'fabric',
+            'fabric_code',
+            'fabric_name',
+            'meters_used',
             'quantity',
             'unit_price',
             'customization_notes',
             'position',
             'line_total',
         )
-        read_only_fields = ('id', 'line_total')
+        read_only_fields = ('id', 'line_total', 'fabric_code', 'fabric_name')
 
 
 class OrderStatusEventSerializer(serializers.ModelSerializer):
@@ -148,10 +155,29 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        from apps.inventory.services import adjust_stock
+        from apps.inventory.models import UsageKind
+
         items = validated_data.pop('line_items')
         order = Order.objects.create(**validated_data)
+        actor = self.context['request'].user if 'request' in self.context else None
+
         for idx, item in enumerate(items):
-            OrderLineItem.objects.create(order=order, position=idx, **item)
+            line = OrderLineItem.objects.create(order=order, position=idx, **item)
+            # Auto-deduct fabric stock when both the bolt and a meter count are
+            # supplied. Failures (insufficient stock) bubble up via the atomic
+            # transaction so the entire order create rolls back cleanly.
+            if line.fabric_id and line.meters_used and line.meters_used > 0:
+                adjust_stock(
+                    fabric_id=line.fabric_id,
+                    delta_meters=-line.meters_used,
+                    kind=UsageKind.ORDER,
+                    actor=actor,
+                    order=order,
+                    line_item=line,
+                    notes=f'Auto-deducted on order {order.order_id} creation',
+                )
+
         if not order.subtotal or order.subtotal == Decimal('0'):
             # Auto-roll-up if the staff didn't set a subtotal.
             total = sum(
