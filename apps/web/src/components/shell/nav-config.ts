@@ -51,7 +51,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: 'Quality Check',
         icon: ClipboardCheck,
         roles: ['admin', 'qa'],
-        phase: 5,
+        phase: 1, // live as of Phase 5
       },
       {
         href: '/appointments',

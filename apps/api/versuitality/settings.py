@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'apps.measurements',
     'apps.orders',
     'apps.realtime',
+    'apps.qa',
 ]
 
 MIDDLEWARE = [

@@ -354,3 +354,33 @@ export interface OrderStats {
   created_last_7_days: number;
   by_status: { status: OrderStatus; count: number }[];
 }
+
+// ---------------------------------------------------------------------------
+// QA
+// ---------------------------------------------------------------------------
+
+export type QcOutcome = 'pass' | 'fail';
+export type QcResult = 'pass' | 'fail';
+
+export interface QcChecklistItemDef {
+  key: string;
+  label: string;
+  description: string;
+}
+
+export interface QcChecklistResponse {
+  result: QcResult;
+  note: string;
+}
+
+export interface QcInspection {
+  id: string;
+  order: string;
+  inspector: string | null;
+  inspector_name: string;
+  outcome: QcOutcome;
+  checklist: Record<string, QcChecklistResponse>;
+  overall_comment: string;
+  failed_items: string[];
+  created_at: string;
+}

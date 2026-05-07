@@ -31,11 +31,12 @@ const ROLE_NEXT_STEPS: Record<Role, string[]> = {
   master: [
     'Open the production board — orders are grouped by current status',
     'Move orders forward as you progress through cutting / stitching / trial',
-    'Pick up rework items flagged by QA (Phase 5)',
+    'Pick up rework items flagged by QA — failed checklist items show on the order page',
   ],
   qa: [
-    'Open the QC queue — only orders ready for inspection (Phase 5)',
+    'Open the QC queue — only orders awaiting inspection appear there',
     'Run the structured checklist before passing or rejecting',
+    'Failed inspections record per-item notes for the master to act on',
   ],
   accountant: [
     'View order history and revenue trends (Phase 8)',

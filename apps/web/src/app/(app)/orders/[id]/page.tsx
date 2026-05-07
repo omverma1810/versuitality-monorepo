@@ -5,12 +5,14 @@ import {
   ArrowLeft,
   Calendar,
   CheckCircle2,
+  ClipboardCheck,
   Download,
-  IndianRupee,
   Phone,
   Receipt,
   Ruler,
   Send,
+  ShieldAlert,
+  ShieldCheck,
   StickyNote,
   X,
 } from 'lucide-react';
@@ -25,6 +27,8 @@ import { Button } from '@/components/ui/button';
 import { useAuthGate } from '@/hooks/useAuthGate';
 import { ApiError } from '@/lib/api';
 import { getOrder, openOrderPdf, transitionOrder } from '@/lib/orders';
+import { fetchChecklistItems, fetchInspections } from '@/lib/qa';
+import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 import {
   GARMENT_LABELS,
@@ -32,6 +36,8 @@ import {
   ORDER_TYPE_LABELS,
   type Order,
   type OrderStatus,
+  type QcChecklistItemDef,
+  type QcInspection,
 } from '@versuitality/types';
 
 const REQUIRES_REASON: OrderStatus[] = ['qc_rejected'];
@@ -52,11 +58,26 @@ export default function OrderDetailPage() {
   const [transitioning, setTransitioning] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
+  const [inspections, setInspections] = useState<QcInspection[]>([]);
+  const [checklistItems, setChecklistItems] = useState<QcChecklistItemDef[]>([]);
+  const userRole = useAuthStore((s) => s.user?.role);
+
   useEffect(() => {
     if (!ready) return;
     let cancelled = false;
-    getOrder(params.id as string)
-      .then((o) => !cancelled && setOrder(o))
+    Promise.all([
+      getOrder(params.id as string),
+      fetchInspections(params.id as string).catch(() => ({ results: [] as QcInspection[] })),
+      fetchChecklistItems().catch(() => [] as QcChecklistItemDef[]),
+    ])
+      .then(([o, insp, items]) => {
+        if (cancelled) return;
+        setOrder(o);
+        setInspections(
+          'results' in insp ? insp.results : (insp as QcInspection[]),
+        );
+        setChecklistItems(items as QcChecklistItemDef[]);
+      })
       .catch((e: Error) => !cancelled && setError(e.message));
     return () => {
       cancelled = true;
@@ -179,10 +200,21 @@ export default function OrderDetailPage() {
 
           <div className="flex flex-col items-start gap-3 md:items-end">
             <StatusBadge status={order.status} size="md" />
-            <Button onClick={downloadPdf} loading={downloading} variant="secondary">
-              <Download className="h-4 w-4" />
-              PDF receipt
-            </Button>
+            <div className="flex items-center gap-2">
+              {order.status === 'ready_for_qc' &&
+                (userRole === 'qa' || userRole === 'admin') && (
+                  <Link href={`/qa/${order.id}`}>
+                    <Button>
+                      <ClipboardCheck className="h-4 w-4" />
+                      Start QC inspection
+                    </Button>
+                  </Link>
+                )}
+              <Button onClick={downloadPdf} loading={downloading} variant="secondary">
+                <Download className="h-4 w-4" />
+                PDF receipt
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -249,6 +281,14 @@ export default function OrderDetailPage() {
               ))}
             </ul>
           </section>
+
+          {/* QC inspections */}
+          {inspections.length > 0 && (
+            <QcInspectionsCard
+              inspections={inspections}
+              items={checklistItems}
+            />
+          )}
 
           {/* Notes */}
           {order.notes && (
@@ -423,5 +463,97 @@ function KV({
         {value}
       </p>
     </div>
+  );
+}
+
+function QcInspectionsCard({
+  inspections,
+  items,
+}: {
+  inspections: QcInspection[];
+  items: QcChecklistItemDef[];
+}) {
+  const labelOf = (key: string) => items.find((i) => i.key === key)?.label ?? key;
+  const latest = inspections[0];
+  const isPass = latest?.outcome === 'pass';
+
+  return (
+    <section className="glass-panel p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ClipboardCheck className="h-4 w-4 text-gold-400" />
+          <h2 className="font-display text-lg">Quality inspections</h2>
+        </div>
+        {latest && (
+          <span
+            className={cn(
+              'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider',
+              isPass
+                ? 'border-status-ready/40 bg-status-ready/15 text-emerald-200'
+                : 'border-status-rejected/40 bg-status-rejected/15 text-red-200',
+            )}
+          >
+            {isPass ? (
+              <ShieldCheck className="h-3 w-3" />
+            ) : (
+              <ShieldAlert className="h-3 w-3" />
+            )}
+            Latest: {latest.outcome.toUpperCase()}
+          </span>
+        )}
+      </div>
+
+      <ul className="space-y-2">
+        {inspections.map((insp, i) => (
+          <li
+            key={insp.id}
+            className={cn(
+              'rounded-xl border p-3 text-xs',
+              insp.outcome === 'pass'
+                ? 'border-status-ready/30 bg-status-ready/5'
+                : 'border-status-rejected/30 bg-status-rejected/5',
+              i === 0 && 'ring-1 ring-gold-500/20',
+            )}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider',
+                  insp.outcome === 'pass'
+                    ? 'border-status-ready/40 bg-status-ready/15 text-emerald-200'
+                    : 'border-status-rejected/40 bg-status-rejected/15 text-red-200',
+                )}
+              >
+                {insp.outcome === 'pass' ? (
+                  <ShieldCheck className="h-3 w-3" />
+                ) : (
+                  <ShieldAlert className="h-3 w-3" />
+                )}
+                {insp.outcome.toUpperCase()}
+              </span>
+              <span className="text-foreground/50">
+                {new Date(insp.created_at).toLocaleString()} · {insp.inspector_name}
+              </span>
+            </div>
+            {insp.outcome === 'fail' && insp.failed_items.length > 0 && (
+              <ul className="mt-2 space-y-1">
+                {insp.failed_items.map((k) => {
+                  const note = insp.checklist?.[k]?.note;
+                  return (
+                    <li key={k} className="text-foreground/70">
+                      <span className="text-red-200">✗ {labelOf(k)}</span>
+                      {note && <span className="text-foreground/60"> — "{note}"</span>}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            {insp.overall_comment && (
+              <p className="mt-2 text-foreground/60">"{insp.overall_comment}"</p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

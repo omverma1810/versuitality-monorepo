@@ -102,7 +102,7 @@ python manage.py runserver 0.0.0.0:8000
 | 8 | Admin analytics |
 | 9 | Polish + production cut |
 
-Currently shipping: **Phase 4** (Real-time order board via Django Channels).
+Currently shipping: **Phase 5** (QA module + structured checklist).
 
 ## Phase 1 — what's live
 
@@ -217,4 +217,31 @@ Currently shipping: **Phase 4** (Real-time order board via Django Channels).
 - **Live dashboard** — admin/staff/master/qa tiles refetch the order
   stats whenever an event arrives, keeping "Active in production",
   "Pending QC" and "Delivered today" accurate without a refresh.
+
+## Phase 5 — what's live
+
+- New `apps.qa` Django app with a single source-of-truth checklist
+  (`apps/qa/checklist.py`) covering stitching, finishing, measurement
+  match, buttons & buttonholes, lining, pressing, and fabric integrity.
+- **`QcInspection`** model — multiple inspections per order (rework
+  loops are first-class), JSON checklist payload, inspector, overall
+  comment, timestamp.
+- **Endpoints**: `GET /api/qa/checklist/` (definition for the UI),
+  `GET /api/qa/queue/` (orders currently `ready_for_qc`),
+  `GET /api/qa/inspections/?order=<id>` (history),
+  `POST /api/qa/inspections/submit/` (records the inspection and drives
+  the order through the state machine — pass → `ready_for_delivery`,
+  fail → `qc_rejected` with the reason summarising failed items).
+- Submission validates that **every checklist item is answered**, that
+  the outcome matches the responses (no passes with failed items), and
+  that fail outcomes carry context — a comment or per-item notes — so
+  the master knows what to rework.
+- **Frontend** — `/qa` queue page (live: refetches when order events
+  fire) and `/qa/[orderId]` inspection form with per-item Pass/Fail
+  buttons, contextual note fields, an overall comment, prior-inspection
+  history, confirmation modal, and dual-action buttons (Pass → ready
+  for delivery, Reject → start rework). Order detail surfaces the QC
+  inspection history (latest highlighted, failed items expanded with
+  per-item notes) and gives QA/admin a "Start QC inspection" CTA when
+  the order is in the queue.
 
