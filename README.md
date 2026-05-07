@@ -47,8 +47,28 @@ Once everything is healthy:
 
 - Web — http://localhost:3000
 - API health — http://localhost:8000/api/health/
+- Django admin — http://localhost:8000/admin/
 - Postgres — localhost:5432 (user/pass from `.env`)
 - Redis — localhost:6379
+
+### Seed the three owners (Phase 1)
+
+```bash
+# As pending invites (you copy the setup link from the console output):
+docker compose exec api python manage.py seed_owners
+
+# Or active immediately with a shared dev password (local only):
+docker compose exec api python manage.py seed_owners \
+    --activate-with-password Versuitality@2026
+```
+
+The owner accounts are:
+
+- Sirish Kumar Golem — `sirish@versuitality.com`
+- Tripti Kumari Golem — `tripti@versuitality.com`
+- Rahul Vankamamidi — `rahul@versuitality.com`
+
+All seeded as `admin` role.
 
 ## Local dev (without Docker)
 
@@ -82,4 +102,28 @@ python manage.py runserver 0.0.0.0:8000
 | 8 | Admin analytics |
 | 9 | Polish + production cut |
 
-Currently shipping: **Phase 0**.
+Currently shipping: **Phase 1** (Auth & RBAC).
+
+## Phase 1 — what's live
+
+- **Custom user model** (`accounts.User`) keyed by email, with role enum
+  (`admin` / `staff` / `master` / `qa` / `accountant`).
+- **JWT auth** via `djangorestframework-simplejwt` with refresh-token
+  rotation + blacklist on logout.
+- **Endpoints**: `POST /api/auth/login/`, `POST /api/auth/logout/`,
+  `POST /api/auth/refresh/`, `GET /api/auth/me/`,
+  `POST /api/auth/setup-password/`, `GET /api/auth/invite/<token>/`,
+  full CRUD on `/api/users/` (admin-only) plus
+  `POST /api/users/<id>/reissue_invite/`.
+- **Admin-invite flow**: admin creates a user → one-time `InviteToken`
+  is issued → invitee opens `/setup-password?token=…`, sets a password,
+  account activates and they're logged straight in. Email delivery is
+  stubbed until Phase 6.
+- **Audit log** (`accounts.AuditLog`) capturing logins, login failures,
+  invitations, role changes, activation/deactivation, password sets.
+- **Frontend** — Zustand auth store with localStorage persistence, fetch
+  client with single-flight refresh interceptor, role-aware sidebar +
+  topbar shell, glassmorphic dashboard with role-personalised next-steps,
+  admin Team & Roles page (search, role change, activate/deactivate,
+  re-issue invite, copy setup link).
+

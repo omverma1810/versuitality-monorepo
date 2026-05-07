@@ -1,12 +1,8 @@
-"""Django settings for the Versuitality API.
-
-Phase 0 keeps this intentionally lean: a working DRF setup, CORS for the web
-app, and a /api/health/ endpoint. Auth, Channels, and the domain apps are
-introduced in later phases.
-"""
+"""Django settings for the Versuitality API."""
 from __future__ import annotations
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -39,9 +35,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Third-party
     'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     # Local
     'apps.core',
+    'apps.accounts',
 ]
 
 MIDDLEWARE = [
@@ -86,9 +85,16 @@ DATABASES = {
     }
 }
 
+AUTH_USER_MODEL = 'accounts.User'
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+     'OPTIONS': {'min_length': 8}},
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
@@ -108,15 +114,30 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # --- DRF -------------------------------------------------------------------
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        # Phase 1 will swap to JWT.
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 25,
+}
+
+# --- SimpleJWT -------------------------------------------------------------
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
 
 # --- CORS ------------------------------------------------------------------
@@ -132,3 +153,10 @@ CORS_ALLOW_CREDENTIALS = True
 # --- Channels (wired up in Phase 4) ---------------------------------------
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', '6379'))
+
+# --- Versuitality config ---------------------------------------------------
+VERSUITALITY = {
+    'BRAND_NAME': 'Versuitality',
+    'ORDER_ID_PREFIX': 'VS',
+    'WEB_BASE_URL': os.environ.get('WEB_BASE_URL', 'http://localhost:3000'),
+}
