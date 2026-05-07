@@ -102,7 +102,7 @@ python manage.py runserver 0.0.0.0:8000
 | 8 | Admin analytics |
 | 9 | Polish + production cut |
 
-Currently shipping: **Phase 1** (Auth & RBAC).
+Currently shipping: **Phase 2** (CRM + measurement form).
 
 ## Phase 1 — what's live
 
@@ -126,4 +126,31 @@ Currently shipping: **Phase 1** (Auth & RBAC).
   topbar shell, glassmorphic dashboard with role-personalised next-steps,
   admin Team & Roles page (search, role change, activate/deactivate,
   re-issue invite, copy setup link).
+
+## Phase 2 — what's live
+
+- **CRM** (`crm.Client`) — UUID PK, auto-assigned `VS-CL-XXXXXX` client ID,
+  unique mobile (normalised), preferences as JSON arrays, address, age
+  group, photo URL, internal notes, audited `created_by`.
+- **Measurements** (`measurements.MeasurementSet`) — direct digital twin of
+  the paper form (10 upper points, 8 lower points, suit lapel/button/vent,
+  half-inch precision), garment-types selection, fabric details,
+  customisation notes, **cloth image upload** to local media in dev, fully
+  versioned by visit timestamp.
+- **Endpoints**: `/api/clients/` CRUD, `/api/clients/search/?q=` (name,
+  mobile last-4, client ID, email), `/api/clients/by_mobile/` for
+  returning-client detection, `/api/clients/<id>/measurements/export/`
+  (Excel via openpyxl, gold-headered workbook), `/api/measurements/` CRUD
+  with multipart support for cloth images.
+- **Frontend** — `/clients` list (search, stat tiles, glassmorphic cards),
+  multi-step `/clients/new` intake (Contact → Preferences → Measurements
+  → Review) with **returning-client detection while typing**,
+  `/clients/[id]` profile (Overview / Measurements / Orders / Notes tabs)
+  with Excel export, `/clients/[id]/measurements/new` for repeat visits.
+- **Live silhouette reference** — focusing a measurement field highlights
+  the corresponding hotspot on a stylised front-view SVG so staff never
+  guess which body point each field maps to.
+- **Global search** — topbar input becomes a real fuzzy search with debounce,
+  keyboard nav (↑/↓/Enter/Esc), and ⌘/Ctrl-K shortcut. Searches name,
+  mobile, last-4 digits, and client ID.
 

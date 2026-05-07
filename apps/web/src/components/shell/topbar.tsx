@@ -1,12 +1,13 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, LogOut, Search, Sparkles } from 'lucide-react';
+import { Bell, LogOut, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { Avatar } from '@/components/ui/avatar';
 import { RoleBadge } from '@/components/ui/role-badge';
+import { GlobalSearch } from '@/components/shell/global-search';
 import { logout } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
@@ -46,17 +47,8 @@ export function Topbar() {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-white/5 bg-navy-800/60 px-6 backdrop-blur-xl">
-      <div className="relative flex-1 max-w-xl">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
-        <input
-          placeholder="Search clients, orders, mobile numbers…"
-          className="h-10 w-full rounded-xl border border-white/10 bg-white/[0.03] pl-10 pr-4 text-sm outline-none transition-colors placeholder:text-foreground/30 focus:border-gold-500/40 focus:bg-white/[0.06]"
-          disabled
-          title="Global search ships in Phase 2"
-        />
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded bg-white/5 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-foreground/40">
-          Phase 2
-        </span>
+      <div className="flex-1">
+        <GlobalSearch />
       </div>
 
       <div className="hidden items-center gap-2 text-xs text-foreground/50 md:flex">

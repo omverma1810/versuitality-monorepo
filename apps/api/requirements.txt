@@ -13,9 +13,10 @@ daphne==4.1.2
 # Auth (used in Phase 1)
 djangorestframework-simplejwt==5.3.1
 
-# Exports (used in Phase 3+)
+# Exports (used in Phase 2+)
 reportlab==4.2.5
 openpyxl==3.1.5
+Pillow==11.0.0
 
 # Notifications (used in Phase 6)
 sendgrid==6.11.0

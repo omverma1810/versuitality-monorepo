@@ -37,7 +37,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: 'Clients',
         icon: Users,
         roles: ['admin', 'staff', 'master'],
-        phase: 2,
+        phase: 1, // live as of Phase 2 — set to <=1 so it isn't badged "P2"
       },
       {
         href: '/orders',
