@@ -7,6 +7,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from apps.accounts.audit import record as audit_record
 from apps.accounts.models import Role
+from apps.notifications.services import notify_order_status_changed
 from apps.realtime.broadcaster import order_status_changed as broadcast_status
 
 from .models import (
@@ -99,4 +100,5 @@ def transition_order(*, order: Order, target: str, actor, reason: str = '') -> O
     # line_item_count without a separate round-trip.
     order.line_item_count = order.line_items.count()
     broadcast_status(order, previous_status=previous, actor=actor, reason=reason)
+    notify_order_status_changed(order, previous_status=previous)
     return event

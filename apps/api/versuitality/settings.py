@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'apps.orders',
     'apps.realtime',
     'apps.qa',
+    'apps.notifications',
 ]
 
 MIDDLEWARE = [
@@ -170,6 +171,19 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+# --- Notifications (Phase 6) ----------------------------------------------
+# When these credentials are blank, providers fall back to the console
+# logger so the rest of the pipeline (Notification rows, admin log, UI
+# panel) is exercised in dev. Drop real values into .env to flip to live
+# delivery without any code changes.
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
+NOTIFICATION_EMAIL_FROM = os.environ.get('NOTIFICATION_EMAIL_FROM', 'orders@versuitality.com')
+NOTIFICATION_EMAIL_FROM_NAME = os.environ.get('NOTIFICATION_EMAIL_FROM_NAME', 'Versuitality')
+
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
+TWILIO_WHATSAPP_FROM = os.environ.get('TWILIO_WHATSAPP_FROM', '')
 
 # --- Versuitality config ---------------------------------------------------
 VERSUITALITY = {

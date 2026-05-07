@@ -102,7 +102,7 @@ python manage.py runserver 0.0.0.0:8000
 | 8 | Admin analytics |
 | 9 | Polish + production cut |
 
-Currently shipping: **Phase 5** (QA module + structured checklist).
+Currently shipping: **Phase 6** (Notifications — Email + WhatsApp pipeline).
 
 ## Phase 1 — what's live
 
@@ -244,4 +244,44 @@ Currently shipping: **Phase 5** (QA module + structured checklist).
   inspection history (latest highlighted, failed items expanded with
   per-item notes) and gives QA/admin a "Start QC inspection" CTA when
   the order is in the queue.
+
+## Phase 6 — what's live
+
+- New `apps.notifications` Django app with a clean **provider abstraction**
+  (`apps/notifications/providers/base.py`). Two real providers
+  (`SendGridEmailProvider`, `TwilioWhatsAppProvider`) plus
+  `ConsoleEmailProvider` / `ConsoleWhatsAppProvider` as the no-creds
+  fallback.
+- **Env-driven router** (`get_email_provider`, `get_whatsapp_provider`):
+  if `SENDGRID_API_KEY` is present → SendGrid takes over; if all three
+  Twilio variables are set (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`,
+  `TWILIO_WHATSAPP_FROM`) → Twilio takes over. Otherwise the console
+  providers log the rendered message and stamp the Notification row as
+  `sent` via `console:*`. Drop creds into `.env` to flip live — no
+  code changes.
+- **Premium-voice templates** (`apps/notifications/templates.py`) per
+  status transition (order received, requirements noted, cutting,
+  stitching, ready-for-trial, alterations underway, ready-for-delivery,
+  delivered/thank-you). Internal-only statuses (`ready_for_qc`,
+  `qc_rejected`) intentionally suppress client dispatch. Templates use a
+  `_SafeMap` so missing context keys never crash the pipeline.
+- **`Notification` model** records every dispatch attempt with channel,
+  recipient, template key, rendered subject/body, status (pending /
+  sent / failed / skipped), provider, provider message id, error, and
+  metadata. Indexed by `(order, -created_at)` for the per-order log.
+- **Hooks**: `apps.orders.views.create()` fires `notify_order_created`
+  after the WS broadcast. `apps.orders.transitions.transition_order()`
+  fires `notify_order_status_changed`. Both calls are wrapped in
+  try/except — messaging is a best-effort overlay on the durable HTTP
+  API, so a provider hiccup never breaks an order update.
+- **Endpoints**: `GET /api/notifications/?order=<id>` (filterable also
+  by `channel` + `status`).
+- **Frontend** — order detail (`/orders/[id]`) gains a Notifications
+  panel below the timeline showing each dispatch with its channel icon
+  (Mail / MessageCircle), status pill (Sent / Failed / Pending), provider
+  badge ("Console (dev)" when running on the fallback), recipient, and
+  timestamp. Click any row to expand the rendered subject + body and
+  the provider message id / error. Refetches automatically after each
+  status transition so the just-fired email and WhatsApp messages
+  appear immediately.
 

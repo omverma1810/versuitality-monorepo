@@ -20,12 +20,14 @@ import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { NotificationLog } from '@/components/orders/notification-log';
 import { StatusBadge } from '@/components/orders/status-badge';
 import { StatusTimeline } from '@/components/orders/status-timeline';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuthGate } from '@/hooks/useAuthGate';
 import { ApiError } from '@/lib/api';
+import { fetchOrderNotifications } from '@/lib/notifications';
 import { getOrder, openOrderPdf, transitionOrder } from '@/lib/orders';
 import { fetchChecklistItems, fetchInspections } from '@/lib/qa';
 import { useAuthStore } from '@/store/authStore';
@@ -34,6 +36,7 @@ import {
   GARMENT_LABELS,
   ORDER_STATUS_LABELS,
   ORDER_TYPE_LABELS,
+  type NotificationLogEntry,
   type Order,
   type OrderStatus,
   type QcChecklistItemDef,
@@ -60,6 +63,7 @@ export default function OrderDetailPage() {
 
   const [inspections, setInspections] = useState<QcInspection[]>([]);
   const [checklistItems, setChecklistItems] = useState<QcChecklistItemDef[]>([]);
+  const [notifications, setNotifications] = useState<NotificationLogEntry[]>([]);
   const userRole = useAuthStore((s) => s.user?.role);
 
   useEffect(() => {
@@ -69,14 +73,18 @@ export default function OrderDetailPage() {
       getOrder(params.id as string),
       fetchInspections(params.id as string).catch(() => ({ results: [] as QcInspection[] })),
       fetchChecklistItems().catch(() => [] as QcChecklistItemDef[]),
+      fetchOrderNotifications(params.id as string).catch(
+        () => [] as NotificationLogEntry[],
+      ),
     ])
-      .then(([o, insp, items]) => {
+      .then(([o, insp, items, notifs]) => {
         if (cancelled) return;
         setOrder(o);
         setInspections(
           'results' in insp ? insp.results : (insp as QcInspection[]),
         );
         setChecklistItems(items as QcChecklistItemDef[]);
+        setNotifications(notifs as NotificationLogEntry[]);
       })
       .catch((e: Error) => !cancelled && setError(e.message));
     return () => {
@@ -112,6 +120,9 @@ export default function OrderDetailPage() {
       setOrder(data.order);
       setTransitionTarget(null);
       setReason('');
+      fetchOrderNotifications(order.id)
+        .then(setNotifications)
+        .catch(() => undefined);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Could not update status.');
     } finally {
@@ -373,6 +384,8 @@ export default function OrderDetailPage() {
             <h2 className="mb-3 font-display text-lg">Timeline</h2>
             <StatusTimeline events={order.status_events} current={order.status} />
           </section>
+
+          <NotificationLog entries={notifications} />
         </div>
       </div>
 

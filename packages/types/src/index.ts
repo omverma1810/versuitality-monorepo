@@ -384,3 +384,39 @@ export interface QcInspection {
   failed_items: string[];
   created_at: string;
 }
+
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+
+export type NotificationChannel = 'email' | 'whatsapp';
+export type NotificationStatus = 'pending' | 'sent' | 'failed' | 'skipped';
+
+export const NOTIFICATION_TEMPLATE_LABELS: Record<string, string> = {
+  order_received: 'Order received',
+  requirements_noted: 'Requirements noted',
+  cutting_started: 'Cutting started',
+  stitching_in_progress: 'Stitching in progress',
+  ready_for_trial: 'Ready for trial',
+  alteration_in_progress: 'Alterations underway',
+  ready_for_delivery: 'Ready for delivery',
+  delivered: 'Delivered (thank-you)',
+};
+
+export interface NotificationLogEntry {
+  id: string;
+  order: string | null;
+  order_code: string | null;
+  channel: NotificationChannel;
+  template_key: string;
+  to_address: string;
+  subject: string;
+  body: string;
+  status: NotificationStatus;
+  provider: string;
+  provider_message_id: string;
+  error: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  sent_at: string | null;
+}
