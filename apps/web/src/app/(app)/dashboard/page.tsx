@@ -7,11 +7,12 @@ import {
   Scissors,
   ShieldCheck,
   Sparkles,
-  Users,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { RoleBadge } from '@/components/ui/role-badge';
-import { ROLE_DESCRIPTIONS, type Role } from '@versuitality/types';
+import { getOrderStats } from '@/lib/orders';
+import { ROLE_DESCRIPTIONS, type OrderStats, type Role } from '@versuitality/types';
 import { useAuthStore } from '@/store/authStore';
 
 const ROLE_NEXT_STEPS: Record<Role, string[]> = {
@@ -40,35 +41,54 @@ const ROLE_NEXT_STEPS: Record<Role, string[]> = {
   ],
 };
 
-const PHASE_TILES = [
-  {
-    icon: Users,
-    title: 'Clients',
-    body: 'CRM, measurement form, history & search',
-    phase: 2,
-  },
-  {
-    icon: Receipt,
-    title: 'Orders',
-    body: 'Multi-step creation, PDF receipt, status timeline',
-    phase: 3,
-  },
-  {
-    icon: Scissors,
-    title: 'Live board',
-    body: 'Real-time kanban via Django Channels',
-    phase: 4,
-  },
-  {
-    icon: ShieldCheck,
-    title: 'QA checklist',
-    body: 'Structured pass/fail with rework loop',
-    phase: 5,
-  },
-];
+function LiveTile({
+  icon: Icon,
+  title,
+  value,
+  hint,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  value: number;
+  hint?: string;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="glass-panel relative flex flex-col gap-3 p-5"
+    >
+      <div className="flex items-center justify-between">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-500/10 text-gold-300">
+          <Icon className="h-5 w-5" />
+        </span>
+        {hint && (
+          <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] uppercase tracking-wider text-foreground/40">
+            {hint}
+          </span>
+        )}
+      </div>
+      <div>
+        <p className="text-xs uppercase tracking-wider text-foreground/40">
+          {title}
+        </p>
+        <p className="font-display text-3xl tabular-nums">{value}</p>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
+  const [stats, setStats] = useState<OrderStats | null>(null);
+
+  useEffect(() => {
+    getOrderStats()
+      .then(setStats)
+      .catch(() => undefined);
+  }, []);
+
   if (!user) return null;
 
   const firstName = user.full_name.split(' ', 1)[0];
@@ -110,31 +130,29 @@ export default function DashboardPage() {
       </motion.section>
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {PHASE_TILES.map((tile, i) => {
-          const Icon = tile.icon;
-          return (
-            <motion.div
-              key={tile.title}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.05 * i }}
-              className="glass-panel group relative flex flex-col gap-3 p-5"
-            >
-              <div className="flex items-center justify-between">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-500/10 text-gold-300">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] uppercase tracking-wider text-foreground/40">
-                  Phase {tile.phase}
-                </span>
-              </div>
-              <div>
-                <p className="font-display text-lg">{tile.title}</p>
-                <p className="text-xs text-foreground/50">{tile.body}</p>
-              </div>
-            </motion.div>
-          );
-        })}
+        <LiveTile
+          icon={Receipt}
+          title="Active orders"
+          value={stats?.active ?? 0}
+          hint="In production"
+        />
+        <LiveTile
+          icon={Sparkles}
+          title="Created · last 7 days"
+          value={stats?.created_last_7_days ?? 0}
+        />
+        <LiveTile
+          icon={ShieldCheck}
+          title="Pending QC"
+          value={
+            stats?.by_status.find((b) => b.status === 'ready_for_qc')?.count ?? 0
+          }
+        />
+        <LiveTile
+          icon={Scissors}
+          title="Delivered today"
+          value={stats?.delivered_today ?? 0}
+        />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-3">

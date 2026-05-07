@@ -4,10 +4,8 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   Calendar,
-  Download,
   FileSpreadsheet,
   Image as ImageIcon,
-  Mail,
   MapPin,
   Phone,
   Plus,
@@ -21,12 +19,14 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 
+import { StatusBadge } from '@/components/orders/status-badge';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tabs } from '@/components/ui/tabs';
 import { useAuthGate } from '@/hooks/useAuthGate';
 import { exportMeasurementsXlsx, getClient } from '@/lib/clients';
 import { listMeasurements } from '@/lib/measurements';
+import { listOrders } from '@/lib/orders';
 import { cn } from '@/lib/utils';
 import {
   AGE_GROUP_LABELS,
@@ -35,6 +35,7 @@ import {
   OCCASION_LABELS,
   type Client,
   type MeasurementSet,
+  type OrderListItem,
 } from '@versuitality/types';
 
 export default function ClientProfilePage() {
@@ -44,6 +45,7 @@ export default function ClientProfilePage() {
 
   const [client, setClient] = useState<Client | null>(null);
   const [measurements, setMeasurements] = useState<MeasurementSet[]>([]);
+  const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [tab, setTab] = useState<'overview' | 'measurements' | 'orders' | 'notes'>(
     'overview',
   );
@@ -57,11 +59,13 @@ export default function ClientProfilePage() {
     Promise.all([
       getClient(params.id as string),
       listMeasurements(params.id as string),
+      listOrders({ client: params.id as string }),
     ])
-      .then(([c, m]) => {
+      .then(([c, m, o]) => {
         if (cancelled) return;
         setClient(c);
         setMeasurements(m.results);
+        setOrders(o.results);
       })
       .catch((e: Error) => !cancelled && setError(e.message));
     return () => {
@@ -196,7 +200,7 @@ export default function ClientProfilePage() {
         tabs={[
           { key: 'overview', label: 'Overview' },
           { key: 'measurements', label: 'Measurements', count: measurements.length },
-          { key: 'orders', label: 'Orders', count: client.order_count ?? 0 },
+          { key: 'orders', label: 'Orders', count: orders.length },
           { key: 'notes', label: 'Notes' },
         ]}
       />
@@ -209,7 +213,7 @@ export default function ClientProfilePage() {
 
       {tab === 'overview' && <OverviewTab client={client} />}
       {tab === 'measurements' && <MeasurementsTab measurements={measurements} />}
-      {tab === 'orders' && <OrdersTab />}
+      {tab === 'orders' && <OrdersTab orders={orders} clientId={client.id} />}
       {tab === 'notes' && <NotesTab client={client} />}
     </div>
   );
@@ -468,15 +472,72 @@ function MeasurementsTab({ measurements }: { measurements: MeasurementSet[] }) {
   );
 }
 
-function OrdersTab() {
+function OrdersTab({
+  orders,
+  clientId,
+}: {
+  orders: OrderListItem[];
+  clientId: string;
+}) {
+  if (orders.length === 0) {
+    return (
+      <div className="glass-panel flex flex-col items-center gap-3 p-12 text-center">
+        <Receipt className="h-10 w-10 text-gold-400" />
+        <p className="font-display text-xl">No orders yet</p>
+        <p className="max-w-md text-sm text-foreground/50">
+          Create the client's first bespoke order — the measurement set you
+          captured will be linked, and a PDF receipt is generated on save.
+        </p>
+        <Link href={`/orders/new?client=${clientId}`}>
+          <Button>
+            <Plus className="h-4 w-4" />
+            New order for this client
+          </Button>
+        </Link>
+      </div>
+    );
+  }
   return (
-    <div className="glass-panel flex flex-col items-center gap-3 p-12 text-center">
-      <Receipt className="h-10 w-10 text-gold-400" />
-      <p className="font-display text-xl">Orders ship in Phase 3</p>
-      <p className="max-w-md text-sm text-foreground/50">
-        Order creation, multi-step builder, status timeline, and PDF receipts
-        all land alongside the order lifecycle in the next phase.
-      </p>
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <Link href={`/orders/new?client=${clientId}`}>
+          <Button>
+            <Plus className="h-4 w-4" />
+            New order
+          </Button>
+        </Link>
+      </div>
+      <ul className="space-y-2">
+        {orders.map((o, i) => (
+          <motion.li
+            key={o.id}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.03 }}
+          >
+            <Link
+              href={`/orders/${o.id}`}
+              className="glass-panel group flex items-center justify-between gap-3 p-4 transition-colors hover:border-gold-500/30 hover:bg-white/[0.04]"
+            >
+              <div className="min-w-0">
+                <p className="font-mono text-[10px] uppercase tracking-wider text-gold-300/80">
+                  {o.order_id}
+                </p>
+                <p className="truncate text-sm text-foreground/80">
+                  {o.garment_summary || `${o.line_item_count ?? 0} items`}
+                </p>
+                <p className="mt-0.5 text-[11px] text-foreground/50">
+                  {new Date(o.created_at).toLocaleDateString()} · ₹{' '}
+                  {Number(o.subtotal).toLocaleString()}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <StatusBadge status={o.status} />
+              </div>
+            </Link>
+          </motion.li>
+        ))}
+      </ul>
     </div>
   );
 }

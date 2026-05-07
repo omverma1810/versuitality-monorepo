@@ -102,7 +102,7 @@ python manage.py runserver 0.0.0.0:8000
 | 8 | Admin analytics |
 | 9 | Polish + production cut |
 
-Currently shipping: **Phase 2** (CRM + measurement form).
+Currently shipping: **Phase 3** (Order lifecycle + PDF receipt).
 
 ## Phase 1 — what's live
 
@@ -153,4 +153,36 @@ Currently shipping: **Phase 2** (CRM + measurement form).
 - **Global search** — topbar input becomes a real fuzzy search with debounce,
   keyboard nav (↑/↓/Enter/Esc), and ⌘/Ctrl-K shortcut. Searches name,
   mobile, last-4 digits, and client ID.
+
+## Phase 3 — what's live
+
+- **`orders.Order`** — UUID PK, atomic `VS-YYYYMMDD-XXXX` order ID via a
+  per-day `OrderDailyCounter` table, FK to client + (optional)
+  measurement set, `order_type` (full / alteration), trial/delivery
+  dates, subtotal/advance/balance, internal notes.
+- **`OrderLineItem`** — garment type, fabric description, quantity,
+  unit price, customisation notes, position. Line totals + auto-roll-up
+  to subtotal.
+- **`OrderStatusEvent`** — append-only timeline; every transition logs
+  actor, role, reason, timestamp.
+- **State machine** with role-aware transitions
+  (`apps.orders.transitions`). Master drives production, QA owns the
+  pass/fail step, Staff handles intake + delivery, Admin can force-set.
+  `qc_rejected` requires a reason.
+- **Endpoints**: `/api/orders/` CRUD with filtering (`?status=…&client=…&q=…&from=…&to=…`),
+  `POST /api/orders/<id>/transition/` with target + optional reason,
+  `GET /api/orders/<id>/pdf/` (ReportLab),
+  `GET /api/orders/stats/` (KPIs + per-status counts),
+  `GET /api/orders/transitions_map/`.
+- **Premium PDF receipt** — gold/navy brand chrome, status banner, client
+  + meta block, line-items table with totals, full measurement grid,
+  status timeline. Generated via ReportLab on the fly.
+- **Frontend** — `/orders` list with KPIs, status filter chips, kanban
+  view when "All" is selected, search; `/orders/new` 4-step flow
+  (Client → Garments → Measurements + schedule → Review) with line-item
+  editor and live subtotal; `/orders/[id]` detail with status timeline,
+  next-status quick actions (reason modal for QC rejection), PDF
+  download button. Client profile Orders tab now lists real orders;
+  dashboard tiles show live counts (active, last-7-days, pending QC,
+  delivered today).
 

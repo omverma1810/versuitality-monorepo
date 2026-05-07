@@ -239,3 +239,118 @@ export interface PaginatedResponse<T> {
   previous: string | null;
   results: T[];
 }
+
+// ---------------------------------------------------------------------------
+// Orders
+// ---------------------------------------------------------------------------
+
+export type OrderType = 'full' | 'alteration';
+
+export const ORDER_TYPE_LABELS: Record<OrderType, string> = {
+  full: 'Full bespoke',
+  alteration: 'Alteration only',
+};
+
+export const ORDER_STATUSES: OrderStatus[] = [
+  'order_received',
+  'requirements_noted',
+  'cutting_started',
+  'stitching_in_progress',
+  'ready_for_trial',
+  'alteration_in_progress',
+  'ready_for_qc',
+  'qc_rejected',
+  'ready_for_delivery',
+  'delivered',
+];
+
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  order_received: 'Order received',
+  requirements_noted: 'Requirements noted',
+  cutting_started: 'Cutting started',
+  stitching_in_progress: 'Stitching in progress',
+  ready_for_trial: 'Ready for trial',
+  alteration_in_progress: 'Alteration in progress',
+  ready_for_qc: 'Ready for QC',
+  qc_rejected: 'QC rejected',
+  ready_for_delivery: 'Ready for delivery',
+  delivered: 'Delivered',
+};
+
+export type StatusTone =
+  | 'received'
+  | 'production'
+  | 'trial'
+  | 'rejected'
+  | 'ready'
+  | 'delivered';
+
+export const ORDER_STATUS_TONE: Record<OrderStatus, StatusTone> = {
+  order_received: 'received',
+  requirements_noted: 'received',
+  cutting_started: 'production',
+  stitching_in_progress: 'production',
+  ready_for_trial: 'trial',
+  alteration_in_progress: 'trial',
+  ready_for_qc: 'production',
+  qc_rejected: 'rejected',
+  ready_for_delivery: 'ready',
+  delivered: 'delivered',
+};
+
+export interface OrderLineItem {
+  id?: string;
+  garment_type: GarmentType;
+  fabric_description?: string;
+  quantity: number;
+  unit_price: string | number;
+  customization_notes?: string;
+  position?: number;
+  line_total?: string | number;
+}
+
+export interface OrderStatusEvent {
+  id: string;
+  from_status: OrderStatus | '';
+  to_status: OrderStatus;
+  actor: string | null;
+  actor_name: string;
+  actor_role: Role | null;
+  reason: string;
+  created_at: string;
+}
+
+export interface OrderListItem {
+  id: string;
+  order_id: string;
+  client: ClientSummary;
+  order_type: OrderType;
+  status: OrderStatus;
+  trial_date?: string | null;
+  delivery_date?: string | null;
+  delivered_at?: string | null;
+  subtotal: string;
+  advance: string;
+  balance: string;
+  notes?: string;
+  garment_summary?: string;
+  line_item_count?: number;
+  days_since_creation?: number;
+  next_statuses?: OrderStatus[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Order extends OrderListItem {
+  line_items: OrderLineItem[];
+  status_events: OrderStatusEvent[];
+  measurement_set?: string | null;
+}
+
+export interface OrderStats {
+  total: number;
+  active: number;
+  delivered_today: number;
+  created_last_7_days: number;
+  by_status: { status: OrderStatus; count: number }[];
+}

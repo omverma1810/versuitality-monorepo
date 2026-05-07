@@ -44,7 +44,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: 'Orders',
         icon: Receipt,
         roles: ['admin', 'staff', 'master', 'qa', 'accountant'],
-        phase: 3,
+        phase: 1, // live as of Phase 3
       },
       {
         href: '/qa',
