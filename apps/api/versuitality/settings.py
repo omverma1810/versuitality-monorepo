@@ -27,6 +27,8 @@ ALLOWED_HOSTS = [
 ]
 
 INSTALLED_APPS = [
+    # 'daphne' must be first so runserver delegates to the ASGI server.
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,12 +40,14 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'channels',
     # Local
     'apps.core',
     'apps.accounts',
     'apps.crm',
     'apps.measurements',
     'apps.orders',
+    'apps.realtime',
 ]
 
 MIDDLEWARE = [
@@ -153,9 +157,18 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# --- Channels (wired up in Phase 4) ---------------------------------------
+# --- Channels (Phase 4 — real-time order board) ---------------------------
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', '6379'))
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [(REDIS_HOST, REDIS_PORT)],
+        },
+    },
+}
 
 # --- Versuitality config ---------------------------------------------------
 VERSUITALITY = {

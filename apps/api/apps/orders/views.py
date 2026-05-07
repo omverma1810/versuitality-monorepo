@@ -10,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.accounts.permissions import IsAuthenticatedActive
+from apps.realtime.broadcaster import order_created as broadcast_order_created
 
 from .models import ALLOWED_TRANSITIONS, Order, OrderStatus, PRODUCTION_FLOW
 from .pdf import render_order_pdf
@@ -76,6 +77,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         order = serializer.save(created_by=request.user)
+        broadcast_order_created(order, actor=request.user)
         return Response(
             OrderDetailSerializer(order, context={'request': request}).data,
             status=drf_status.HTTP_201_CREATED,

@@ -102,7 +102,7 @@ python manage.py runserver 0.0.0.0:8000
 | 8 | Admin analytics |
 | 9 | Polish + production cut |
 
-Currently shipping: **Phase 3** (Order lifecycle + PDF receipt).
+Currently shipping: **Phase 4** (Real-time order board via Django Channels).
 
 ## Phase 1 — what's live
 
@@ -185,4 +185,36 @@ Currently shipping: **Phase 3** (Order lifecycle + PDF receipt).
   download button. Client profile Orders tab now lists real orders;
   dashboard tiles show live counts (active, last-7-days, pending QC,
   delivered today).
+
+## Phase 4 — what's live
+
+- **Django Channels** wired into the existing ASGI app via daphne. New
+  `apps.realtime` module owns the WebSocket layer.
+- **JWT-authenticated WebSocket** — clients connect to
+  `ws://api/ws/orders/?token=<access>`; a `JWTAuthMiddleware` resolves
+  the active user via SimpleJWT's `AccessToken`. Anonymous sockets are
+  closed with code 4401.
+- **Redis channel layer** — `channels_redis` runs over the same Redis
+  instance from Phase 0's compose file.
+- **`OrderBoardConsumer`** subscribes every authenticated client to the
+  `orders.board` group. On `connect` it sends a `hello` payload with the
+  user's role and server time so the client can sanity-check.
+- **Broadcaster** — `apps.realtime.broadcaster` exposes
+  `order_created`, `order_status_changed`, and `order_updated`. The
+  order viewset and the transition pipeline call these after every
+  successful mutation. Failures fall back to a logged warning so the
+  HTTP request still succeeds if Redis hiccups.
+- **Frontend** — singleton `OrderBoardSocket` with exponential-backoff
+  reconnect (cap 15 s) that automatically re-auths whenever the Zustand
+  auth store rotates the access token. `useOrderBoardSocket` hook for
+  components, plus `useOrderBoardStatus` for the new live indicator pill
+  in the topbar (Live · Connecting · Reconnecting · Offline).
+- **Live `/orders` board** — incoming events update the cards in place,
+  pulse a gold ring on the affected card for ~2s, and fire a glassy
+  toast (`VS-… → Stitching in progress`) in the bottom-right. The KPI
+  tiles and per-status filter counts recompute client-side from the
+  same data so the page never shows a stale snapshot.
+- **Live dashboard** — admin/staff/master/qa tiles refetch the order
+  stats whenever an event arrives, keeping "Active in production",
+  "Pending QC" and "Delivered today" accurate without a refresh.
 

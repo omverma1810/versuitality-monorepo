@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Avatar } from '@/components/ui/avatar';
 import { RoleBadge } from '@/components/ui/role-badge';
 import { GlobalSearch } from '@/components/shell/global-search';
+import { LiveIndicator } from '@/components/shell/live-indicator';
 import { logout } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
@@ -50,6 +51,8 @@ export function Topbar() {
       <div className="flex-1">
         <GlobalSearch />
       </div>
+
+      <LiveIndicator />
 
       <div className="hidden items-center gap-2 text-xs text-foreground/50 md:flex">
         <Sparkles className="h-3.5 w-3.5 text-gold-400" />

@@ -8,27 +8,29 @@ import {
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { RoleBadge } from '@/components/ui/role-badge';
+import { useOrderBoardSocket } from '@/hooks/useOrderBoardSocket';
 import { getOrderStats } from '@/lib/orders';
+import type { OrderBoardEvent } from '@/lib/socket';
 import { ROLE_DESCRIPTIONS, type OrderStats, type Role } from '@versuitality/types';
 import { useAuthStore } from '@/store/authStore';
 
 const ROLE_NEXT_STEPS: Record<Role, string[]> = {
   admin: [
     'Invite the rest of the team from Team & roles',
-    'Review the live order board (ships in Phase 4)',
+    'Watch the live order board — every status change appears in real time',
     'Open analytics for the month-on-month view (Phase 8)',
   ],
   staff: [
-    'Register a new walk-in client (Phase 2)',
-    'Capture body measurements digitally (Phase 2)',
-    'Create the order and print the PDF receipt (Phase 3)',
+    'Register a new walk-in client',
+    'Capture body measurements digitally and link them to a fresh order',
+    'Hand the printed PDF receipt to the client',
   ],
   master: [
-    'Open the production board (Phase 4)',
-    'Update order status as you progress through cutting / stitching',
+    'Open the production board — orders are grouped by current status',
+    'Move orders forward as you progress through cutting / stitching / trial',
     'Pick up rework items flagged by QA (Phase 5)',
   ],
   qa: [
@@ -83,11 +85,28 @@ export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const [stats, setStats] = useState<OrderStats | null>(null);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     getOrderStats()
       .then(setStats)
       .catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  // Live: re-pull stats whenever an order event fires. The volume here is low
+  // enough that a fresh fetch keeps the math correct without re-deriving on
+  // the client.
+  useOrderBoardSocket(
+    useCallback(
+      (e: OrderBoardEvent) => {
+        if (e.kind === 'hello') return;
+        refresh();
+      },
+      [refresh],
+    ),
+  );
 
   if (!user) return null;
 
