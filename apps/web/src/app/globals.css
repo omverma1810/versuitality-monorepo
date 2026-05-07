@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode — content surfaces. Brand gold/navy live as raw tokens. */
+    --background: 36 33% 98%;
+    --foreground: 248 46% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 248 46% 12%;
+    --muted: 240 10% 96%;
+    --muted-foreground: 248 12% 40%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 47 71% 47%;
+    --primary: 248 46% 22%;
+    --primary-foreground: 47 71% 47%;
+    --accent: 47 71% 47%;
+    --accent-foreground: 248 46% 12%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 250 50% 6%;
+    --foreground: 47 50% 92%;
+    --card: 248 46% 12%;
+    --card-foreground: 47 50% 92%;
+    --muted: 248 30% 18%;
+    --muted-foreground: 248 12% 70%;
+    --border: 248 30% 22%;
+    --input: 248 30% 22%;
+    --ring: 47 71% 47%;
+    --primary: 47 71% 47%;
+    --primary-foreground: 248 46% 8%;
+    --accent: 47 71% 55%;
+    --accent-foreground: 248 46% 8%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  html,
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-glass;
+    background-image: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.02) 100%
+    );
+  }
+
+  .gold-text {
+    background: linear-gradient(135deg, #e2c23e 0%, #cba624 50%, #a6861b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .brand-grid {
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(203, 166, 36, 0.12) 0%, transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(58, 47, 109, 0.5) 0%, transparent 50%),
+      linear-gradient(180deg, #1d1840 0%, #0a0818 100%);
+  }
+}

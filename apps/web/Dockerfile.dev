@@ -1,0 +1,24 @@
+# Development Dockerfile for the Next.js web app.
+# Built from the repo root so that pnpm workspaces resolve.
+FROM node:20-alpine
+
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+
+WORKDIR /app
+
+# Workspace manifests first for better layer caching
+COPY package.json pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/package.json
+COPY packages/ui/package.json ./packages/ui/package.json
+COPY packages/types/package.json ./packages/types/package.json
+
+RUN pnpm install --frozen-lockfile=false
+
+# Copy the rest at runtime via volume mount; copy here so first build works too.
+COPY apps/web ./apps/web
+COPY packages ./packages
+
+WORKDIR /app/apps/web
+
+EXPOSE 3000
+CMD ["pnpm", "dev"]
