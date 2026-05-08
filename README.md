@@ -102,7 +102,10 @@ python manage.py runserver 0.0.0.0:8000
 | 8 | Admin analytics |
 | 9 | Polish + production cut |
 
-Currently shipping: **Phase 8** (Admin analytics).
+Currently shipping: **Phase 9** — production-ready cut. All nine phases live.
+
+For deployment, environment, cred handover, backups, cron, and scaling
+notes, see **[OPERATIONS.md](./OPERATIONS.md)**.
 
 ## Phase 1 — what's live
 
@@ -370,5 +373,52 @@ Currently shipping: **Phase 8** (Admin analytics).
   summary (debounced 600 ms) so analytics stay live without polling.
 - Dashboard next-steps for admin / accountant updated to reflect the
   shipped surface.
+
+## Phase 9 — what's live (production cut)
+
+- **Mobile bottom navigation** — fixed glass strip below `lg`, role-aware
+  (only surfaces the user has access to), gold underline marker on the
+  active route via `layoutId`. Sidebar still owns the desktop view.
+- **Skip-to-content link** — keyboard-only / screen-reader users can
+  jump straight from the page top to `<main>` (Tab once on any
+  authenticated page).
+- **Branded loader + spinner** primitives in `components/ui/spinner.tsx`.
+  The hydration screen now shows the V mark + a gold ring + a "Versuitality"
+  caption instead of a bare spinner.
+- **Global toast system** — `useToastStore` + `<ToastViewport>` mounted
+  in the app shell. Convenience helpers (`toast.success`, `toast.error`,
+  `toast.info`, `toast.warn`) so any component can fire a glassmorphic
+  toast without prop-drilling. Auto-dismisses (errors stay longer),
+  ARIA `role="status"` + `aria-live="polite"`.
+- **Branded 404 + error pages** — `app/not-found.tsx` and `app/error.tsx`.
+  Both wear the brand-grid background and offer one-click recovery
+  (Back to dashboard / Try again).
+- **`/api/readiness/`** endpoint — pings Postgres and Redis and returns
+  `503` with per-dependency detail when anything's down. Hook to your
+  uptime watcher / Kubernetes readiness probe.
+- **`python manage.py seed_demo`** — populates every screen with
+  realistic data: 5 fabrics (one deliberately low-stock), 5 clients
+  with measurements, 6 orders spread across the production flow
+  (including one delivered, one rejected by QC), 4 upcoming
+  appointments. Idempotent; pass `--fresh` to wipe and re-seed.
+- **`OPERATIONS.md`** — deployment runbook covering single-VM bring-up,
+  reverse-proxy templates, the env reference, cred-handover steps for
+  SendGrid + Twilio, cron for appointment reminders, backup + restore
+  drill, scaling notes, and a security checklist.
+
+### Roadmap status
+
+| Phase | Status |
+| --- | --- |
+| 0 — Monorepo scaffold | ✦ shipped |
+| 1 — Auth & RBAC | ✦ shipped |
+| 2 — CRM + measurement form | ✦ shipped |
+| 3 — Order lifecycle + PDF | ✦ shipped |
+| 4 — Real-time dashboard | ✦ shipped |
+| 5 — QA module + checklist | ✦ shipped |
+| 6 — Notifications pipeline | ✦ shipped (creds pluggable) |
+| 7 — Inventory + appointments | ✦ shipped |
+| 8 — Admin analytics | ✦ shipped |
+| 9 — Polish + production cut | ✦ shipped |
 
 
