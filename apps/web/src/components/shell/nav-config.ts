@@ -89,7 +89,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: 'Analytics',
         icon: BarChart3,
         roles: ['admin', 'accountant'],
-        phase: 8,
+        phase: 1, // live as of Phase 8
       },
       {
         href: '/admin/audit',

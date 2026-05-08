@@ -102,7 +102,7 @@ python manage.py runserver 0.0.0.0:8000
 | 8 | Admin analytics |
 | 9 | Polish + production cut |
 
-Currently shipping: **Phase 7** (Inventory + appointments).
+Currently shipping: **Phase 8** (Admin analytics).
 
 ## Phase 1 — what's live
 
@@ -343,4 +343,32 @@ Currently shipping: **Phase 7** (Inventory + appointments).
     (top 5, with current quantity + threshold). Both auto-hide when
     empty.
   - Sidebar Inventory + Appointments entries are now always live.
+
+## Phase 8 — what's live
+
+- New `apps.analytics` Django app with a single composer
+  (`apps.analytics.services.build_summary`) that fans out into
+  status distribution, month-on-month KPIs, headline counters,
+  garment mix, top-clients leaderboard, daily revenue trend (zero-
+  filled), stage funnel (avg days each order spends in each status,
+  derived from `OrderStatusEvent`), and QC rejection rate.
+- **Endpoints** — `GET /api/analytics/summary/?from=&to=` (admin /
+  accountant only), and `GET /api/analytics/orders.xlsx/?from=&to=`
+  for a date-range Excel of every order in the window with totals,
+  client info, and status timeline metadata.
+- **`/admin/analytics`** page — gated to admin + accountant. Date-range
+  picker (defaults to month-to-date), four KPI tiles with month-on-
+  month deltas (orders + revenue) and live counters, full-width
+  revenue trend Sparkline with peak-day callout, **donut chart** of
+  status distribution, **garment-mix horizontal bars**, **stage-funnel
+  bars** showing average days per status, semicircular **QC gauge**
+  (green ≤ 5%, gold ≤ 15%, red beyond), and a **top-clients**
+  leaderboard with deep-links into each profile.
+- All charts are pure SVG / CSS — no chart library — so they share the
+  brand palette and respect the gold + navy tokens.
+- Page subscribes to the WebSocket order stream and refetches the
+  summary (debounced 600 ms) so analytics stay live without polling.
+- Dashboard next-steps for admin / accountant updated to reflect the
+  shipped surface.
+
 

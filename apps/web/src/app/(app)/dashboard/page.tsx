@@ -36,7 +36,7 @@ const ROLE_NEXT_STEPS: Record<Role, string[]> = {
   admin: [
     'Invite the rest of the team from Team & roles',
     'Watch the live order board — every status change appears in real time',
-    'Open analytics for the month-on-month view (Phase 8)',
+    'Open Analytics for the month-on-month view, top clients, and stage funnel',
   ],
   staff: [
     'Register a new walk-in client',
@@ -54,8 +54,8 @@ const ROLE_NEXT_STEPS: Record<Role, string[]> = {
     'Failed inspections record per-item notes for the master to act on',
   ],
   accountant: [
-    'View order history and revenue trends (Phase 8)',
-    'Export financial reports to Excel (Phase 8)',
+    'Open Analytics for revenue trends, garment mix, and stage funnel',
+    'Export the date-range orders workbook for offline review',
   ],
 };
 

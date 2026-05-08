@@ -546,3 +546,83 @@ export interface Appointment {
   created_at: string;
   updated_at: string;
 }
+
+// ---------------------------------------------------------------------------
+// Analytics
+// ---------------------------------------------------------------------------
+
+export interface AnalyticsRange {
+  from: string;
+  to: string;
+}
+
+export interface AnalyticsBucket {
+  count: number;
+  revenue: number;
+  from: string;
+  to: string;
+}
+
+export interface AnalyticsMom {
+  current: AnalyticsBucket;
+  previous: AnalyticsBucket;
+  count_delta: number;
+  revenue_delta: number;
+}
+
+export interface AnalyticsKpis {
+  active_clients: number;
+  active_orders: number;
+  orders_today: number;
+  delivered_today: number;
+}
+
+export interface StatusBucket {
+  status: OrderStatus;
+  count: number;
+}
+
+export interface GarmentBucket {
+  garment_type: GarmentType;
+  count: number;
+  revenue: number;
+}
+
+export interface TopClientRow {
+  id: string;
+  client_id: string;
+  full_name: string;
+  mobile: string;
+  order_count: number;
+  total_value: number;
+}
+
+export interface RevenueTrendPoint {
+  date: string;
+  count: number;
+  revenue: number;
+}
+
+export interface FunnelStage {
+  status: OrderStatus;
+  avg_days: number | null;
+  samples: number;
+}
+
+export interface QcStats {
+  total: number;
+  failed: number;
+  rate: number;
+}
+
+export interface AnalyticsSummary {
+  range: AnalyticsRange;
+  mom: AnalyticsMom;
+  kpis: AnalyticsKpis;
+  status_distribution: StatusBucket[];
+  garment_breakdown: GarmentBucket[];
+  top_clients: TopClientRow[];
+  revenue_trend: RevenueTrendPoint[];
+  stage_funnel: FunnelStage[];
+  qc_stats: QcStats;
+}
