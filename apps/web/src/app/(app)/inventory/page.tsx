@@ -144,7 +144,7 @@ export default function InventoryPage() {
           <p className="font-display text-xl">No fabrics tracked yet</p>
           <p className="max-w-md text-sm text-foreground/50">
             Add your first fabric bolt — name, supplier, colour, opening
-            quantity. Subsequent edits run through a signed ledger so you'll
+            quantity. Subsequent edits run through a signed ledger so you&apos;ll
             always know how stock moved.
           </p>
           <Link href="/inventory/new">

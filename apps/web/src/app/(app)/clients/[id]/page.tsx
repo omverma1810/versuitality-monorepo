@@ -6,6 +6,7 @@ import {
   Calendar,
   FileSpreadsheet,
   Image as ImageIcon,
+  Mail,
   MapPin,
   Phone,
   Plus,
@@ -120,7 +121,7 @@ export default function ClientProfilePage() {
           exit={{ opacity: 0 }}
           className="rounded-xl border border-status-ready/40 bg-status-ready/10 px-4 py-2 text-sm text-emerald-200"
         >
-          ✓ Saved. {client.full_name}'s profile is ready and the measurement
+          ✓ Saved. {client.full_name}&apos;s profile is ready and the measurement
           set has been linked.
         </motion.div>
       )}
@@ -485,7 +486,7 @@ function OrdersTab({
         <Receipt className="h-10 w-10 text-gold-400" />
         <p className="font-display text-xl">No orders yet</p>
         <p className="max-w-md text-sm text-foreground/50">
-          Create the client's first bespoke order — the measurement set you
+          Create the client&apos;s first bespoke order — the measurement set you
           captured will be linked, and a PDF receipt is generated on save.
         </p>
         <Link href={`/orders/new?client=${clientId}`}>

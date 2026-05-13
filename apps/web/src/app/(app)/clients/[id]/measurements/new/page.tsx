@@ -92,7 +92,7 @@ export default function NewMeasurementPage() {
       <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-foreground/60">
         <Ruler className="h-4 w-4 text-gold-400" />
         Capturing a new measurement set links it to this client and is
-        timestamped — every visit's history is preserved.
+        timestamped — every visit&apos;s history is preserved.
       </div>
 
       <MeasurementForm state={state} onChange={setState} />

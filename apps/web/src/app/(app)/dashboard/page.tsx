@@ -211,7 +211,7 @@ export default function DashboardPage() {
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <CalendarDays className="h-4 w-4 text-gold-400" />
-                  <h2 className="font-display text-lg">Today's appointments</h2>
+                  <h2 className="font-display text-lg">Today&apos;s appointments</h2>
                 </div>
                 <Link
                   href="/appointments"
@@ -309,7 +309,7 @@ export default function DashboardPage() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="glass-panel p-6 lg:col-span-2"
         >
-          <h2 className="mb-4 font-display text-xl">What's next for you</h2>
+          <h2 className="mb-4 font-display text-xl">What&apos;s next for you</h2>
           <ul className="space-y-3 text-sm">
             {ROLE_NEXT_STEPS[user.role].map((step) => (
               <li

@@ -555,14 +555,21 @@ function QcInspectionsCard({
                   return (
                     <li key={k} className="text-foreground/70">
                       <span className="text-red-200">✗ {labelOf(k)}</span>
-                      {note && <span className="text-foreground/60"> — "{note}"</span>}
+                      {note && (
+                        <span className="text-foreground/60">
+                          {' '}
+                          — &ldquo;{note}&rdquo;
+                        </span>
+                      )}
                     </li>
                   );
                 })}
               </ul>
             )}
             {insp.overall_comment && (
-              <p className="mt-2 text-foreground/60">"{insp.overall_comment}"</p>
+              <p className="mt-2 text-foreground/60">
+                &ldquo;{insp.overall_comment}&rdquo;
+              </p>
             )}
           </li>
         ))}
