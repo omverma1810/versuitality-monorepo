@@ -116,7 +116,10 @@ export function StatusTimeline({ events, current }: Props) {
                   <p className="mt-0.5 text-[11px] text-foreground/50">
                     by {event.actor_name}
                     {event.reason && (
-                      <span className="text-foreground/70"> · "{event.reason}"</span>
+                      <span className="text-foreground/70">
+                        {' '}
+                        · &ldquo;{event.reason}&rdquo;
+                      </span>
                     )}
                   </p>
                 )}

@@ -34,7 +34,7 @@ export default function NotFound() {
         </h1>
         <p className="mt-3 flex items-center justify-center gap-2 text-sm text-foreground/60">
           <ScissorsLineDashed className="h-4 w-4 text-gold-400" />
-          The page you're looking for couldn't be found.
+          The page you&apos;re looking for couldn&apos;t be found.
         </p>
         <div className="mt-6 flex justify-center">
           <Link href="/dashboard">

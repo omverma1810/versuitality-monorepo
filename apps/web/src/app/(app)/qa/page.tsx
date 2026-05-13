@@ -93,7 +93,7 @@ export default function QcQueuePage() {
           <p className="font-display text-xl">All caught up</p>
           <p className="max-w-md text-sm text-foreground/50">
             Nothing is waiting for QC right now. As soon as the master marks
-            an order as ready for quality check it'll appear here — the page
+            an order as ready for quality check it&apos;ll appear here — the page
             updates live, no refresh needed.
           </p>
         </div>

@@ -93,7 +93,7 @@ export default function InspectionPage() {
     return (
       <div className="glass-panel flex flex-col items-center gap-3 p-12 text-center">
         <ShieldAlert className="h-10 w-10 text-amber-400" />
-        <p className="font-display text-xl">This order isn't in QC right now</p>
+        <p className="font-display text-xl">This order isn&apos;t in QC right now</p>
         <p className="max-w-md text-sm text-foreground/50">
           Inspections can only be recorded against orders the master has
           marked as ready for quality check. Current status:
@@ -420,7 +420,7 @@ function PreviousInspections({
               </p>
             )}
             {h.overall_comment && (
-              <p className="mt-1 text-foreground/60">"{h.overall_comment}"</p>
+              <p className="mt-1 text-foreground/60">&ldquo;{h.overall_comment}&rdquo;</p>
             )}
           </li>
         ))}
@@ -468,9 +468,18 @@ function ConfirmModal({
           </h2>
         </div>
         <p className="text-sm text-foreground/60">
-          {isPass
-            ? 'The order will move to "Ready for delivery" and the client will be notified once messaging ships in Phase 6.'
-            : 'The order will move back to "QC rejected" so the master can address the failed items. Your comment is preserved on the timeline.'}
+          {isPass ? (
+            <>
+              The order will move to &ldquo;Ready for delivery&rdquo; and the
+              client will be notified once messaging ships in Phase 6.
+            </>
+          ) : (
+            <>
+              The order will move back to &ldquo;QC rejected&rdquo; so the master
+              can address the failed items. Your comment is preserved on the
+              timeline.
+            </>
+          )}
         </p>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose} disabled={submitting}>
