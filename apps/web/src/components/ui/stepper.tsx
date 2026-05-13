@@ -29,7 +29,10 @@ export function Stepper({ steps, current, className }: StepperProps) {
         const active = i === current;
         const isLast = i === steps.length - 1;
         return (
-          <li key={s.key} className="flex items-start gap-3">
+          <li
+            key={s.key}
+            className={cn('flex items-start gap-3', !isLast && 'pb-5')}
+          >
             <div className="flex flex-col items-center self-stretch">
               <div
                 className={cn(
@@ -52,9 +55,7 @@ export function Stepper({ steps, current, className }: StepperProps) {
                 />
               )}
             </div>
-            <div
-              className={cn('-mt-0.5 min-w-0 flex-1', !isLast && 'pb-5')}
-            >
+            <div className="min-w-0 flex-1">
               <p
                 className={cn(
                   'truncate text-sm font-medium leading-tight',
