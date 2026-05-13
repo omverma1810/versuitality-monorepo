@@ -18,13 +18,28 @@ SECRET_KEY = os.environ.get(
 )
 DEBUG = env.bool('DJANGO_DEBUG', default=True)
 
-ALLOWED_HOSTS = [
-    h.strip()
-    for h in os.environ.get(
-        'DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,api'
-    ).split(',')
-    if h.strip()
-]
+
+def _csv_env(name: str, default: str = '') -> list[str]:
+    return [v.strip() for v in os.environ.get(name, default).split(',') if v.strip()]
+
+
+ALLOWED_HOSTS = _csv_env('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,api')
+
+# Cloud Run injects requests via a randomised *.run.app hostname plus your
+# custom domain. Setting this env var to "1" tells Django to accept any host
+# (safe behind Cloud Run's frontend; do NOT enable on an open VM).
+if os.environ.get('DJANGO_TRUST_ALL_HOSTS') == '1':
+    ALLOWED_HOSTS = ['*']
+
+# When sitting behind a reverse proxy that terminates TLS (Cloud Run, Caddy,
+# Nginx), trust the X-Forwarded-Proto header so request.is_secure() works.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
+CSRF_TRUSTED_ORIGINS = _csv_env(
+    'DJANGO_CSRF_TRUSTED_ORIGINS',
+    'http://localhost:3000,http://localhost:8000',
+)
 
 INSTALLED_APPS = [
     # 'daphne' must be first so runserver delegates to the ASGI server.
