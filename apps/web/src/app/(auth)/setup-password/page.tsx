@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { CheckCircle2, KeyRound, Lock, Mail } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 import { Logo } from '@/components/brand/logo';
 import { RoleBadge } from '@/components/ui/role-badge';
@@ -16,6 +16,25 @@ import type { InviteLookup } from '@versuitality/types';
 type Stage = 'loading' | 'ready' | 'invalid' | 'submitting' | 'done';
 
 export default function SetupPasswordPage() {
+  return (
+    <Suspense fallback={<SetupPasswordFallback />}>
+      <SetupPasswordContent />
+    </Suspense>
+  );
+}
+
+function SetupPasswordFallback() {
+  return (
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12">
+      <div className="flex flex-col items-center gap-3 py-8 text-foreground/60">
+        <span className="h-8 w-8 animate-spin rounded-full border-2 border-gold-500/40 border-t-gold-500" />
+        <p className="text-xs">Loading setup page...</p>
+      </div>
+    </main>
+  );
+}
+
+function SetupPasswordContent() {
   const router = useRouter();
   const params = useSearchParams();
   const token = params.get('token') ?? '';
