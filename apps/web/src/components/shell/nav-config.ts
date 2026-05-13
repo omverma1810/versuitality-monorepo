@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import type { LucideIcon } from 'lucide-react';
 import {
   BarChart3,
@@ -14,7 +15,7 @@ import {
 import type { Role } from '@versuitality/types';
 
 export interface NavItem {
-  href: string;
+  href: Route;
   label: string;
   icon: LucideIcon;
   roles?: Role[];
