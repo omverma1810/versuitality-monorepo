@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 import { cn } from '@/lib/utils';
 
 interface AvatarProps {
@@ -17,16 +19,14 @@ function initialsOf(name: string): string {
 export function Avatar({ name, src, size = 36, className }: AvatarProps) {
   if (src) {
     return (
-      <>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt={name}
-          width={size}
-          height={size}
-          className={cn('rounded-full object-cover', className)}
-        />
-      </>
+      <Image
+        src={src}
+        alt={name}
+        width={size}
+        height={size}
+        sizes={`${size}px`}
+        className={cn('rounded-full object-cover', className)}
+      />
     );
   }
   return (

@@ -35,7 +35,7 @@ import {
   OCCASION_LABELS,
   type AgeGroup,
   type Client,
-  type Fabric,
+  type FabricPreference,
   type Occasion,
 } from '@versuitality/types';
 
@@ -72,10 +72,12 @@ const OCCASION_OPTIONS = (Object.keys(OCCASION_LABELS) as Occasion[]).map(
   (v) => ({ value: v, label: OCCASION_LABELS[v] }),
 );
 
-const FABRIC_OPTIONS = (Object.keys(FABRIC_LABELS) as Fabric[]).map((v) => ({
+const FABRIC_OPTIONS = (Object.keys(FABRIC_LABELS) as FabricPreference[]).map(
+  (v) => ({
   value: v,
   label: FABRIC_LABELS[v],
-}));
+  }),
+);
 
 export default function NewClientPage() {
   const router = useRouter();
@@ -84,7 +86,7 @@ export default function NewClientPage() {
   const [step, setStep] = useState(0);
   const [contact, setContact] = useState<ContactState>(EMPTY_CONTACT);
   const [occasions, setOccasions] = useState<Occasion[]>([]);
-  const [fabrics, setFabrics] = useState<Fabric[]>([]);
+  const [fabrics, setFabrics] = useState<FabricPreference[]>([]);
   const [notes, setNotes] = useState('');
   const [measurements, setMeasurements] = useState<MeasurementFormState>(EMPTY_FORM);
 

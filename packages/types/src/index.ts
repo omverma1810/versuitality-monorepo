@@ -107,7 +107,7 @@ export const OCCASION_LABELS: Record<Occasion, string> = {
   ethnic: 'Ethnic',
 };
 
-export type Fabric =
+export type FabricPreference =
   | 'cotton'
   | 'linen'
   | 'wool'
@@ -117,7 +117,7 @@ export type Fabric =
   | 'velvet'
   | 'tweed';
 
-export const FABRIC_LABELS: Record<Fabric, string> = {
+export const FABRIC_LABELS: Record<FabricPreference, string> = {
   cotton: 'Cotton',
   linen: 'Linen',
   wool: 'Wool',
@@ -138,7 +138,7 @@ export interface Client {
   address?: string;
   age_group?: AgeGroup | '';
   occasion_preferences: Occasion[];
-  fabric_preferences: Fabric[];
+  fabric_preferences: FabricPreference[];
   notes?: string;
   photo_url?: string;
   created_at: string;

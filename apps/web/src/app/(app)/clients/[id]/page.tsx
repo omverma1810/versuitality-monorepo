@@ -16,6 +16,7 @@ import {
   StickyNote,
   Tag,
 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -439,11 +440,12 @@ function MeasurementsTab({ measurements }: { measurements: MeasurementSet[] }) {
                   rel="noreferrer"
                   className="group relative flex h-32 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={m.cloth_image}
                     alt="Cloth"
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover transition-transform group-hover:scale-105"
                   />
                   <span className="absolute bottom-1 right-1 rounded bg-navy-900/70 px-1.5 py-0.5 text-[10px]">
                     <ImageIcon className="inline h-3 w-3" /> View

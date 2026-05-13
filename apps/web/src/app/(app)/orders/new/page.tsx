@@ -429,8 +429,9 @@ export default function NewOrderPage() {
                                 value={f.id}
                                 className="bg-navy-700"
                               >
-                                {f.code} · {f.name} ·{' '}
-                                {Number(f.quantity_meters).toFixed(1)} m in stock
+                                {`${f.code} · ${f.name} · ${Number(
+                                  f.quantity_meters,
+                                ).toFixed(1)} m in stock`}
                               </option>
                             ))}
                           </select>
@@ -499,8 +500,8 @@ export default function NewOrderPage() {
                 <div className="glass-panel p-6">
                   <h2 className="mb-3 font-display text-xl">Link a measurement set</h2>
                   <p className="mb-4 text-sm text-foreground/60">
-                    Pick the visit&apos;s measurement set. The PDF receipt and the
-                    Master tailor will reference these numbers.
+                    Pick the measurement set for this visit. The PDF receipt and
+                    the master tailor will reference these numbers.
                   </p>
                   {loadingMeasurements ? (
                     <div className="flex items-center gap-2 text-xs text-foreground/50">
