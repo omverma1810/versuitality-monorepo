@@ -57,3 +57,4 @@ coverage/
 
 # Docker
 docker-data/
+.vercel
