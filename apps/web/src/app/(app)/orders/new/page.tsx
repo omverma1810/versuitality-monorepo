@@ -499,7 +499,7 @@ export default function NewOrderPage() {
                 <div className="glass-panel p-6">
                   <h2 className="mb-3 font-display text-xl">Link a measurement set</h2>
                   <p className="mb-4 text-sm text-foreground/60">
-                    Pick the visit's measurement set. The PDF receipt and the
+                    Pick the visit&apos;s measurement set. The PDF receipt and the
                     Master tailor will reference these numbers.
                   </p>
                   {loadingMeasurements ? (

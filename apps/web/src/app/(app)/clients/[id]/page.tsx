@@ -439,6 +439,7 @@ function MeasurementsTab({ measurements }: { measurements: MeasurementSet[] }) {
                   rel="noreferrer"
                   className="group relative flex h-32 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]"
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={m.cloth_image}
                     alt="Cloth"

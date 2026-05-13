@@ -17,13 +17,16 @@ function initialsOf(name: string): string {
 export function Avatar({ name, src, size = 36, className }: AvatarProps) {
   if (src) {
     return (
-      <img
-        src={src}
-        alt={name}
-        width={size}
-        height={size}
-        className={cn('rounded-full object-cover', className)}
-      />
+      <>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={name}
+          width={size}
+          height={size}
+          className={cn('rounded-full object-cover', className)}
+        />
+      </>
     );
   }
   return (
