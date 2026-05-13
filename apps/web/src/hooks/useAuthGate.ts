@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useShallow } from 'zustand/react/shallow';
@@ -12,7 +13,7 @@ interface Options {
   /** If set, requires the user to hold one of these roles. */
   roles?: Role[];
   /** Where to send unauthenticated users (default /login). */
-  redirectTo?: string;
+  redirectTo?: Route;
 }
 
 /**
