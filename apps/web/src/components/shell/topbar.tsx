@@ -11,6 +11,8 @@ import { GlobalSearch } from '@/components/shell/global-search';
 import { LiveIndicator } from '@/components/shell/live-indicator';
 import { logout } from '@/lib/auth';
 import { cn } from '@/lib/utils';
+import { beginNavigation } from '@/store/navigationStore';
+import { toast } from '@/store/toastStore';
 import { useAuthStore } from '@/store/authStore';
 
 function useNow() {
@@ -26,6 +28,7 @@ export function Topbar() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const now = useNow();
 
@@ -42,8 +45,16 @@ export function Topbar() {
   if (!user) return null;
 
   async function onLogout() {
-    await logout();
-    router.replace('/login');
+    setLoggingOut(true);
+    toast.info('Signing out');
+    try {
+      await logout();
+      beginNavigation('/login', 'Opening login screen');
+      router.replace('/login');
+      toast.success('Signed out');
+    } finally {
+      setLoggingOut(false);
+    }
   }
 
   return (
@@ -108,11 +119,20 @@ export function Topbar() {
               </div>
               <div className="my-1 h-px bg-white/5" />
               <button
+                type="button"
+                disabled={loggingOut}
                 onClick={onLogout}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-red-200 transition-colors hover:bg-status-rejected/10"
+                className={cn(
+                  'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-red-200 transition-colors hover:bg-status-rejected/10',
+                  loggingOut && 'cursor-progress opacity-70',
+                )}
               >
-                <LogOut className="h-4 w-4" />
-                Sign out
+                {loggingOut ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                ) : (
+                  <LogOut className="h-4 w-4" />
+                )}
+                {loggingOut ? 'Signing out…' : 'Sign out'}
               </button>
             </motion.div>
           )}

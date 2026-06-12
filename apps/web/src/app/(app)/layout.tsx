@@ -4,7 +4,6 @@ import { BottomNav } from '@/components/shell/bottom-nav';
 import { Sidebar } from '@/components/shell/sidebar';
 import { Topbar } from '@/components/shell/topbar';
 import { BrandedLoader } from '@/components/ui/spinner';
-import { ToastViewport } from '@/components/ui/toast-viewport';
 import { useAuthGate } from '@/hooks/useAuthGate';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -38,7 +37,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       <BottomNav />
-      <ToastViewport />
     </div>
   );
 }

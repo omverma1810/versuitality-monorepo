@@ -1,10 +1,12 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
+import { useNavigationStore } from '@/store/navigationStore';
 import { useAuthStore } from '@/store/authStore';
 
 import { NAV_GROUPS, type NavItem } from './nav-config';
@@ -40,13 +42,18 @@ export function BottomNav() {
 
 function Slot({ item, active }: { item: NavItem; active: boolean }) {
   const Icon = item.icon;
+  const pendingPath = useNavigationStore((s) => s.pendingPath);
+  const pending = pendingPath === item.href;
   return (
     <Link
       href={item.href}
       className={cn(
         'group relative flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[10px] uppercase tracking-wider transition-colors',
         active ? 'text-gold-200' : 'text-foreground/55 hover:text-foreground',
+        pending && 'cursor-progress text-gold-100',
       )}
+      data-nav-label={item.label}
+      aria-busy={pending || undefined}
     >
       {active && (
         <motion.span
@@ -55,8 +62,8 @@ function Slot({ item, active }: { item: NavItem; active: boolean }) {
           className="absolute top-0 h-0.5 w-10 rounded-full bg-gradient-gold"
         />
       )}
-      <Icon className="h-4 w-4" />
-      <span className="truncate">{item.label}</span>
+      {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
+      <span className="truncate">{pending ? 'Loading' : item.label}</span>
     </Link>
   );
 }

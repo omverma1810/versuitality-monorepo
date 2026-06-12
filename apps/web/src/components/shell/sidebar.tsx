@@ -1,30 +1,33 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 import { Logo } from '@/components/brand/logo';
 import { cn } from '@/lib/utils';
+import { useNavigationStore } from '@/store/navigationStore';
 import { useAuthStore } from '@/store/authStore';
 
 import { NAV_GROUPS, type NavItem } from './nav-config';
 
 function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   const pathname = usePathname();
+  const pendingPath = useNavigationStore((s) => s.pendingPath);
   const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
   const Icon = item.icon;
   const upcoming = item.phase > 1;
+  const pending = pendingPath === item.href;
 
   const inner = (
     <>
-      <Icon
-        className={cn(
-          'h-4 w-4 shrink-0 transition-colors',
-          active
-            ? 'text-gold-300'
+        <Icon
+          className={cn(
+            'h-4 w-4 shrink-0 transition-colors',
+            active
+              ? 'text-gold-300'
             : upcoming
               ? 'text-foreground/30'
               : 'text-foreground/60 group-hover:text-foreground',
@@ -33,7 +36,9 @@ function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
       {!collapsed && (
         <span className="flex flex-1 items-center justify-between gap-2">
           <span className="truncate">{item.label}</span>
-          {upcoming && (
+          {pending ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-gold-300" />
+          ) : upcoming && (
             <span className="rounded-full bg-white/5 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-foreground/40">
               P{item.phase}
             </span>
@@ -48,7 +53,8 @@ function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
     active
       ? 'bg-gold-500/10 text-gold-200 shadow-[inset_1px_0_0_0_rgba(203,166,36,0.5)]'
       : 'text-foreground/70 hover:bg-white/5 hover:text-foreground',
-    upcoming && !active && 'opacity-60 hover:opacity-90',
+    pending && 'cursor-progress opacity-100',
+    upcoming && !active && !pending && 'opacity-60 hover:opacity-90',
     collapsed && 'justify-center px-0',
   );
 
@@ -61,7 +67,13 @@ function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   }
 
   return (
-    <Link href={item.href} className={className} title={item.label}>
+    <Link
+      href={item.href}
+      className={className}
+      title={item.label}
+      aria-busy={pending || undefined}
+      data-nav-label={item.label}
+    >
       {active && (
         <motion.span
           layoutId="sidebar-active"

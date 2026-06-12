@@ -1,13 +1,14 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, Phone, Search, X } from 'lucide-react';
+import { ArrowRight, Loader2, Phone, Search, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { Avatar } from '@/components/ui/avatar';
 import { searchClients } from '@/lib/clients';
 import { cn } from '@/lib/utils';
+import { beginNavigation } from '@/store/navigationStore';
 import type { ClientSummary } from '@versuitality/types';
 
 export function GlobalSearch() {
@@ -16,6 +17,7 @@ export function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [results, setResults] = useState<ClientSummary[]>([]);
   const [loading, setLoading] = useState(false);
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
   const [highlight, setHighlight] = useState(0);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -65,8 +67,10 @@ export function GlobalSearch() {
   }, []);
 
   function go(id: string) {
+    setNavigatingTo(id);
     setOpen(false);
     setQ('');
+    beginNavigation(`/clients/${id}`, 'Opening client profile');
     router.push(`/clients/${id}`);
   }
 
@@ -165,7 +169,11 @@ export function GlobalSearch() {
                           )}
                         </p>
                       </div>
-                      <ArrowRight className="h-3.5 w-3.5 text-foreground/30 group-hover:text-gold-300" />
+                      {navigatingTo === r.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-gold-300" />
+                      ) : (
+                        <ArrowRight className="h-3.5 w-3.5 text-foreground/30 group-hover:text-gold-300" />
+                      )}
                     </button>
                   </li>
                 ))}

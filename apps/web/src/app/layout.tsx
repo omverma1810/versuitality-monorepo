@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 
+import { NavigationFeedback } from '@/components/shell/navigation-feedback';
+import { ToastViewport } from '@/components/ui/toast-viewport';
+
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
@@ -26,7 +29,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} dark`}>
-      <body className="min-h-screen">{children}</body>
+      <body className="min-h-screen">
+        <NavigationFeedback />
+        {children}
+        <ToastViewport />
+      </body>
     </html>
   );
 }

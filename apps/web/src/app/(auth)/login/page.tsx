@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ApiError } from '@/lib/api';
 import { login } from '@/lib/auth';
+import { beginNavigation } from '@/store/navigationStore';
+import { toast } from '@/store/toastStore';
 import { useAuthStore } from '@/store/authStore';
 
 type ApiHealth = { status: string; service: string; time: string };
@@ -46,8 +48,11 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
+      toast.success('Signed in', 'Redirecting to dashboard');
+      beginNavigation('/dashboard', 'Opening dashboard');
       router.replace('/dashboard');
     } catch (err) {
+      toast.error('Sign in failed', err instanceof ApiError ? err.message : 'Could not reach the server.');
       setError(
         err instanceof ApiError
           ? err.message
