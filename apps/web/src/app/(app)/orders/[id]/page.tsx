@@ -54,7 +54,15 @@ export default function OrderDetailPage() {
 
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [welcome, setWelcome] = useState(search.get('welcome') === '1');
+  const [welcome, setWelcome] = useState(
+    search.get('welcome') === '1' || search.get('inspected') !== null,
+  );
+  const welcomeMessage =
+    search.get('inspected') === 'pass'
+      ? 'Inspection passed — the order is ready for delivery.'
+      : search.get('inspected') === 'fail'
+        ? 'Inspection recorded — the order has gone back to the master for rework.'
+        : 'Order saved. The PDF receipt is ready to download.';
 
   const [transitionTarget, setTransitionTarget] = useState<OrderStatus | null>(null);
   const [reason, setReason] = useState('');
@@ -169,7 +177,7 @@ export default function OrderDetailPage() {
           className="flex items-center gap-2 rounded-xl border border-status-ready/40 bg-status-ready/10 px-4 py-2 text-sm text-emerald-200"
         >
           <CheckCircle2 className="h-4 w-4" />
-          Order saved. The PDF receipt is ready to download.
+          {welcomeMessage}
         </motion.div>
       )}
 

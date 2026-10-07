@@ -42,6 +42,8 @@ def _styles():
                             textColor=GOLD, leading=8))
     base.add(ParagraphStyle('VSLabel', fontName='Helvetica', fontSize=7,
                             textColor=MUTED, leading=10, spaceAfter=1))
+    base.add(ParagraphStyle('VSHead', fontName='Helvetica-Bold', fontSize=7.5,
+                            textColor=GOLD, leading=10))
     base.add(ParagraphStyle('VSValue', fontName='Helvetica-Bold', fontSize=10,
                             textColor=INK, leading=13))
     base.add(ParagraphStyle('VSSection', fontName='Helvetica-Bold', fontSize=10,
@@ -119,13 +121,13 @@ def _kv_table(rows: Iterable[tuple[str, str]], styles, col_widths=None):
 
 def _items_table(order: Order, styles):
     header = [
-        Paragraph('#', styles['VSLabel']),
-        Paragraph('Garment', styles['VSLabel']),
-        Paragraph('Fabric', styles['VSLabel']),
-        Paragraph('Customization', styles['VSLabel']),
-        Paragraph('Qty', styles['VSLabel']),
-        Paragraph('Unit', styles['VSLabel']),
-        Paragraph('Total', styles['VSLabel']),
+        Paragraph('#', styles['VSHead']),
+        Paragraph('Garment', styles['VSHead']),
+        Paragraph('Fabric', styles['VSHead']),
+        Paragraph('Customization', styles['VSHead']),
+        Paragraph('Qty', styles['VSHead']),
+        Paragraph('Unit', styles['VSHead']),
+        Paragraph('Total', styles['VSHead']),
     ]
     rows = [header]
     for i, li in enumerate(order.line_items.all(), 1):
@@ -140,7 +142,7 @@ def _items_table(order: Order, styles):
         ])
     t = Table(
         rows,
-        colWidths=[8 * mm, 28 * mm, 35 * mm, 50 * mm, 12 * mm, 18 * mm, 22 * mm],
+        colWidths=[8 * mm, 26 * mm, 33 * mm, 42 * mm, 12 * mm, 26 * mm, 26 * mm],
         repeatRows=1,
     )
     t.setStyle(TableStyle([
@@ -236,8 +238,8 @@ def _measurements_block(order: Order, styles):
 
 def _timeline_table(order: Order, styles):
     rows = [[
-        Paragraph('Status', styles['VSLabel']),
-        Paragraph('Stamp', styles['VSLabel']),
+        Paragraph('Status', styles['VSHead']),
+        Paragraph('Stamp', styles['VSHead']),
     ]]
     for status in PRODUCTION_FLOW:
         ev = order.status_events.filter(to_status=status).order_by('created_at').first()
@@ -259,8 +261,8 @@ def _timeline_table(order: Order, styles):
         ('BACKGROUND', (0, 0), (-1, 0), NAVY),
         ('TEXTCOLOR', (0, 0), (-1, 0), GOLD),
         ('LINEBELOW', (0, 0), (-1, -1), 0.3, LINE),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('TOPPADDING', (0, 0), (-1, -1), 2),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
         ('LEFTPADDING', (0, 0), (-1, -1), 6),
     ]))
     return t
@@ -365,7 +367,7 @@ def render_order_pdf(order: Order) -> bytes:
         ('Created by', order.created_by.full_name if order.created_by else '—'),
     ]
     meta = Table(
-        [[_kv_table(rows_left, styles), _kv_table(rows_right, styles)]],
+        [[_kv_table(rows_left, styles, [20 * mm, 63 * mm]), _kv_table(rows_right, styles, [26 * mm, 57 * mm])]],
         colWidths=[85 * mm, 85 * mm],
     )
     meta.setStyle(TableStyle([

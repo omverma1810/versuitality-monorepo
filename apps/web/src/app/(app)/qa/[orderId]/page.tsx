@@ -163,7 +163,7 @@ export default function InspectionPage() {
         overall_comment: comment,
         checklist,
       });
-      router.replace(`/orders/${orderId}?welcome=1`);
+      router.replace(`/orders/${orderId}?inspected=${outcome}`);
     } catch (e) {
       if (e instanceof ApiError) {
         const data = e.data as Record<string, unknown> | null;

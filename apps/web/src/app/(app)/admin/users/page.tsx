@@ -330,7 +330,7 @@ function InviteModal({
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required
-            placeholder="Sirish Kumar Golem"
+            placeholder="Priya Nair"
             icon={<UserCog className="h-4 w-4" />}
           />
           <Input
@@ -340,7 +340,7 @@ function InviteModal({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            placeholder="name@versuitality.com"
+            placeholder="name@yourcompany.com"
             icon={<Mail className="h-4 w-4" />}
           />
           <div className="space-y-2">

@@ -1,0 +1,389 @@
+{
+  "a01-login": {
+    "file": "a01-login.png",
+    "title": "The sign-in screen",
+    "section": "Getting started",
+    "role": "all"
+  },
+  "a02-login-filled": {
+    "file": "a02-login-filled.png",
+    "title": "Enter your work email and password",
+    "section": "Getting started",
+    "role": "all"
+  },
+  "a03-dashboard-staff": {
+    "file": "a03-dashboard-staff.png",
+    "title": "Your dashboard \u2014 what needs attention today",
+    "section": "Front desk",
+    "role": "staff"
+  },
+  "a04-appointments": {
+    "file": "a04-appointments.png",
+    "title": "Appointments \u2014 the day at a glance",
+    "section": "Front desk",
+    "role": "staff"
+  },
+  "a05-client-contact": {
+    "file": "a05-client-contact.png",
+    "title": "Step 1 of 4 \u2014 contact details (the mobile number is the client\u2019s identity)",
+    "section": "Registering a client",
+    "role": "staff"
+  },
+  "a06-client-preferences": {
+    "file": "a06-client-preferences.png",
+    "title": "Step 2 of 4 \u2014 style preferences and notes",
+    "section": "Registering a client",
+    "role": "staff"
+  },
+  "a07-measurements": {
+    "file": "a07-measurements.png",
+    "title": "Step 3 of 4 \u2014 the measurement sheet (the figure highlights the point being measured)",
+    "section": "Measurements",
+    "role": "staff",
+    "fullPage": false
+  },
+  "a08-measurements-fabric": {
+    "file": "a08-measurements-fabric.png",
+    "title": "Fabric notes, customisation and a photo of the cloth swatch",
+    "section": "Measurements",
+    "role": "staff"
+  },
+  "a09-client-review": {
+    "file": "a09-client-review.png",
+    "title": "Step 4 of 4 \u2014 review before saving",
+    "section": "Registering a client",
+    "role": "staff"
+  },
+  "a10-client-profile": {
+    "file": "a10-client-profile.png",
+    "title": "The client profile \u2014 ID, contact, preferences and measurement history",
+    "section": "Registering a client",
+    "role": "staff"
+  },
+  "a11-client-measurements": {
+    "file": "a11-client-measurements.png",
+    "title": "Measurement history \u2014 every visit is kept, newest first (with Excel export)",
+    "section": "Measurements",
+    "role": "staff"
+  },
+  "a12-order-client": {
+    "file": "a12-order-client.png",
+    "title": "Order step 1 \u2014 find the client by name, mobile or ID",
+    "section": "Creating an order",
+    "role": "staff"
+  },
+  "a13-order-garments": {
+    "file": "a13-order-garments.png",
+    "title": "Order step 2 \u2014 garments, fabric and price (tracked fabric is deducted from stock)",
+    "section": "Creating an order",
+    "role": "staff"
+  },
+  "a14-order-measurements": {
+    "file": "a14-order-measurements.png",
+    "title": "Order step 3 \u2014 link the measurement set from this visit",
+    "section": "Creating an order",
+    "role": "staff"
+  },
+  "a15-order-schedule": {
+    "file": "a15-order-schedule.png",
+    "title": "Order step 3 \u2014 trial and delivery dates, advance paid, notes",
+    "section": "Creating an order",
+    "role": "staff"
+  },
+  "a16-order-review": {
+    "file": "a16-order-review.png",
+    "title": "Order step 4 \u2014 review the total and confirm",
+    "section": "Creating an order",
+    "role": "staff"
+  },
+  "a17-order-created": {
+    "file": "a17-order-created.png",
+    "title": "Order confirmed \u2014 ID, garments, balance due and the full status timeline",
+    "section": "Creating an order",
+    "role": "staff"
+  },
+  "a18-order-actions": {
+    "file": "a18-order-actions.png",
+    "title": "The \u201cUpdate status\u201d panel only offers the steps your role may take",
+    "section": "Creating an order",
+    "role": "staff"
+  },
+  "a19-order-timeline-notified": {
+    "file": "a19-order-timeline-notified.png",
+    "title": "The timeline records who moved the order, and the client\u2019s notifications are logged",
+    "section": "Creating an order",
+    "role": "staff",
+    "fullPage": false
+  },
+  "b01-dashboard-master": {
+    "file": "b01-dashboard-master.png",
+    "title": "Master dashboard",
+    "section": "Workshop (master)",
+    "role": "master"
+  },
+  "b02-orders-board": {
+    "file": "b02-orders-board.png",
+    "title": "The production board \u2014 every order, by stage, live",
+    "section": "Workshop (master)",
+    "role": "master"
+  },
+  "b03-order-master": {
+    "file": "b03-order-master.png",
+    "title": "The order as the master sees it \u2014 only production steps are offered",
+    "section": "Workshop (master)",
+    "role": "master"
+  },
+  "b04-cutting-started": {
+    "file": "b04-cutting-started.png",
+    "title": "After each step the timeline updates for everyone, instantly",
+    "section": "Workshop (master)",
+    "role": "master"
+  },
+  "b05-ready-for-trial": {
+    "file": "b05-ready-for-trial.png",
+    "title": "Ready for trial \u2014 the client is notified",
+    "section": "Workshop (master)",
+    "role": "master"
+  },
+  "b06-ready-for-qc": {
+    "file": "b06-ready-for-qc.png",
+    "title": "Sent to quality control \u2014 the master cannot pass his own work",
+    "section": "Workshop (master)",
+    "role": "master"
+  },
+  "b07-inventory-master": {
+    "file": "b07-inventory-master.png",
+    "title": "Fabric inventory \u2014 metres in stock, low-stock warnings",
+    "section": "Inventory",
+    "role": "master"
+  },
+  "b08-fabric-ledger": {
+    "file": "b08-fabric-ledger.png",
+    "title": "A fabric\u2019s movement ledger \u2014 every metre in or out, with the order it went to",
+    "section": "Inventory",
+    "role": "master"
+  },
+  "b09-qc-queue": {
+    "file": "b09-qc-queue.png",
+    "title": "The QC queue \u2014 only orders the master has marked \u201cReady for QC\u201d",
+    "section": "Quality check",
+    "role": "qa"
+  },
+  "b10-qc-checklist": {
+    "file": "b10-qc-checklist.png",
+    "title": "The quality checklist",
+    "section": "Quality check",
+    "role": "qa"
+  },
+  "b11-qc-fail-note": {
+    "file": "b11-qc-fail-note.png",
+    "title": "Failed items need a note, so the master knows exactly what to fix",
+    "section": "Quality check",
+    "role": "qa"
+  },
+  "b12-qc-reject-confirm": {
+    "file": "b12-qc-reject-confirm.png",
+    "title": "Confirm the rejection \u2014 the order goes back to the master",
+    "section": "Quality check",
+    "role": "qa"
+  },
+  "b13-qc-rejected-result": {
+    "file": "b13-qc-rejected-result.png",
+    "title": "Rejection recorded",
+    "section": "Quality check",
+    "role": "qa"
+  },
+  "b14-order-qc-rejected": {
+    "file": "b14-order-qc-rejected.png",
+    "title": "The rejected order \u2014 the QA reason is on the timeline and failed items are listed",
+    "section": "Quality check",
+    "role": "master",
+    "fullPage": false
+  },
+  "b15-order-inspections": {
+    "file": "b15-order-inspections.png",
+    "title": "Inspection history with each failed checklist item",
+    "section": "Quality check",
+    "role": "master"
+  },
+  "b16-qc-all-pass": {
+    "file": "b16-qc-all-pass.png",
+    "title": "All checklist items passed",
+    "section": "Quality check",
+    "role": "qa"
+  },
+  "b17-qc-pass-confirm": {
+    "file": "b17-qc-pass-confirm.png",
+    "title": "Confirm the pass \u2014 the order becomes \u201cReady for delivery\u201d",
+    "section": "Quality check",
+    "role": "qa"
+  },
+  "b18-order-ready-for-delivery": {
+    "file": "b18-order-ready-for-delivery.png",
+    "title": "Ready for delivery \u2014 only front desk can mark it delivered",
+    "section": "Delivery",
+    "role": "staff"
+  },
+  "b19-order-delivered": {
+    "file": "b19-order-delivered.png",
+    "title": "Delivered \u2014 the order is complete and the balance is settled",
+    "section": "Delivery",
+    "role": "staff"
+  },
+  "b20-dashboard-accountant": {
+    "file": "b20-dashboard-accountant.png",
+    "title": "Accountant dashboard",
+    "section": "Finance (accountant)",
+    "role": "accountant"
+  },
+  "b21-orders-accountant": {
+    "file": "b21-orders-accountant.png",
+    "title": "Orders \u2014 visible to finance, with no production controls",
+    "section": "Finance (accountant)",
+    "role": "accountant"
+  },
+  "b22-order-accountant": {
+    "file": "b22-order-accountant.png",
+    "title": "An order from finance\u2019s side \u2014 receipt and balance, no status buttons",
+    "section": "Finance (accountant)",
+    "role": "accountant"
+  },
+  "b23-analytics": {
+    "file": "b23-analytics.png",
+    "title": "Analytics \u2014 revenue trend, quality outcomes, orders by stage",
+    "section": "Finance (accountant)",
+    "role": "accountant"
+  },
+  "b24-analytics-more": {
+    "file": "b24-analytics-more.png",
+    "title": "Garment mix, top clients and the production funnel",
+    "section": "Finance (accountant)",
+    "role": "accountant"
+  },
+  "c01-dashboard-admin": {
+    "file": "c01-dashboard-admin.png",
+    "title": "Owner dashboard \u2014 live counts, today\u2019s appointments, low stock, quick actions",
+    "section": "Administration",
+    "role": "admin"
+  },
+  "c02-team": {
+    "file": "c02-team.png",
+    "title": "Team & roles \u2014 everyone with access, their role, and whether they are active",
+    "section": "Administration",
+    "role": "admin"
+  },
+  "c03-invite": {
+    "file": "c03-invite.png",
+    "title": "Invite a teammate \u2014 pick their role",
+    "section": "Administration",
+    "role": "admin"
+  },
+  "c04-invite-link": {
+    "file": "c04-invite-link.png",
+    "title": "A one-time setup link \u2014 send it to the new teammate",
+    "section": "Administration",
+    "role": "admin"
+  },
+  "c05-setup-password": {
+    "file": "c05-setup-password.png",
+    "title": "The invitation page \u2014 choose a password (the link works only once)",
+    "section": "Administration",
+    "role": "all"
+  },
+  "c06-new-teammate-dashboard": {
+    "file": "c06-new-teammate-dashboard.png",
+    "title": "The new teammate lands on their own dashboard, already signed in",
+    "section": "Administration",
+    "role": "staff"
+  },
+  "c07-audit-log": {
+    "file": "c07-audit-log.png",
+    "title": "The audit log \u2014 who did what, and when (admin only)",
+    "section": "Administration",
+    "role": "admin"
+  },
+  "c08-orders-admin": {
+    "file": "c08-orders-admin.png",
+    "title": "Orders board for the owner",
+    "section": "Orders",
+    "role": "admin"
+  },
+  "c09-orders-search": {
+    "file": "c09-orders-search.png",
+    "title": "Search orders by ID, client name or mobile",
+    "section": "Orders",
+    "role": "admin"
+  },
+  "c10-fabric-new": {
+    "file": "c10-fabric-new.png",
+    "title": "Add a fabric \u2014 supplier, colour, opening stock and pricing",
+    "section": "Inventory",
+    "role": "admin"
+  },
+  "c11-fabric-restock": {
+    "file": "c11-fabric-restock.png",
+    "title": "Stock in / stock out \u2014 each movement is logged in the ledger",
+    "section": "Inventory",
+    "role": "admin"
+  },
+  "c12-appointment-new": {
+    "file": "c12-appointment-new.png",
+    "title": "Book an appointment \u2014 consultation, measurement, trial or delivery",
+    "section": "Appointments",
+    "role": "staff"
+  },
+  "c13-appointments-list": {
+    "file": "c13-appointments-list.png",
+    "title": "The appointment list \u2014 upcoming visits at a glance",
+    "section": "Appointments",
+    "role": "staff"
+  },
+  "c14-clients-list": {
+    "file": "c14-clients-list.png",
+    "title": "Clients \u2014 find anyone by name, mobile or ID",
+    "section": "Clients",
+    "role": "staff"
+  },
+  "c15-clients-search": {
+    "file": "c15-clients-search.png",
+    "title": "Client search narrows the list as you type",
+    "section": "Clients",
+    "role": "staff"
+  },
+  "c16-global-search": {
+    "file": "c16-global-search.png",
+    "title": "Global search (Ctrl/\u2318 + K) \u2014 jump straight to a client",
+    "section": "Tips",
+    "role": "all"
+  },
+  "c17-analytics-admin": {
+    "file": "c17-analytics-admin.png",
+    "title": "Analytics \u2014 pick any date range and export to Excel",
+    "section": "Administration",
+    "role": "admin"
+  },
+  "m01-mobile-dashboard": {
+    "file": "m01-mobile-dashboard.png",
+    "title": "On a phone \u2014 the dashboard with the bottom navigation bar",
+    "section": "On your phone",
+    "role": "staff"
+  },
+  "m02-mobile-orders": {
+    "file": "m02-mobile-orders.png",
+    "title": "Orders on a phone",
+    "section": "On your phone",
+    "role": "staff"
+  },
+  "m03-mobile-intake": {
+    "file": "m03-mobile-intake.png",
+    "title": "Register a client on a phone or tablet at the counter",
+    "section": "On your phone",
+    "role": "staff"
+  },
+  "a20-receipt": {
+    "file": "a20-receipt.png",
+    "title": "The printable PDF receipt",
+    "section": "Creating an order",
+    "role": "staff"
+  }
+}

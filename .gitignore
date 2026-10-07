@@ -63,3 +63,16 @@ docker-data/
 test-results/
 playwright-report/
 blob-report/
+
+# User-manual generated artefacts (see docs/user-manual/README.md)
+docs/user-manual/images/
+docs/user-manual/videos/
+docs/user-manual/.jpg/
+docs/user-manual/.tmp-video/
+docs/user-manual/.*.json
+docs/user-manual/.error-*.png
+docs/user-manual/receipt.pdf
+docs/user-manual/orders-export.xlsx
+docs/user-manual/*.html
+docs/user-manual/*.pdf
+docs/user-manual/*.zip

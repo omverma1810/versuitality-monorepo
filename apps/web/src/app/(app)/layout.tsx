@@ -1,5 +1,6 @@
 'use client';
 
+import { NumberWheelGuard } from '@/components/shell/number-wheel-guard';
 import { BottomNav } from '@/components/shell/bottom-nav';
 import { Sidebar } from '@/components/shell/sidebar';
 import { Topbar } from '@/components/shell/topbar';
@@ -15,6 +16,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="brand-grid min-h-screen">
+      <NumberWheelGuard />
       {/* Skip-to-content for keyboard + screen-reader users. */}
       <a
         href="#app-main"

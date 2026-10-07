@@ -3,9 +3,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 
-import { toast } from '@/store/toastStore';
 import { beginNavigation, completeNavigation, useNavigationStore } from '@/store/navigationStore';
 
 const MIN_VISIBLE_MS = 450;
@@ -16,7 +15,8 @@ function deriveLabel(anchor: HTMLAnchorElement) {
   const title = anchor.getAttribute('title')?.trim();
   if (title) return title;
   const text = anchor.textContent?.replace(/\s+/g, ' ').trim();
-  return text || 'Loading';
+  // Card-style links contain a whole card's worth of text; only short labels read well.
+  return text && text.length <= 28 ? text : 'next screen';
 }
 
 export function NavigationFeedback() {
@@ -25,8 +25,6 @@ export function NavigationFeedback() {
   const pendingPath = useNavigationStore((s) => s.pendingPath);
   const pendingLabel = useNavigationStore((s) => s.pendingLabel);
   const startedAt = useNavigationStore((s) => s.startedAt);
-  const previousPending = useRef<string | null>(null);
-  const previousLabel = useRef<string | null>(null);
   const currentPath = useMemo(
     () => `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`,
     [pathname, searchParams],
@@ -69,25 +67,6 @@ export function NavigationFeedback() {
     document.addEventListener('click', onClick, true);
     return () => document.removeEventListener('click', onClick, true);
   }, [currentPath]);
-
-  useEffect(() => {
-    if (!pendingPath) {
-      if (previousPending.current) {
-        toast.success(
-          previousLabel.current ? `${previousLabel.current} loaded` : 'Navigation complete',
-        );
-      }
-      previousPending.current = null;
-      previousLabel.current = null;
-      return;
-    }
-
-    if (previousPending.current !== pendingPath) {
-      previousPending.current = pendingPath;
-      previousLabel.current = pendingLabel ?? null;
-      toast.info(pendingLabel ? `Opening ${pendingLabel}` : 'Opening destination');
-    }
-  }, [pendingLabel, pendingPath]);
 
   useEffect(() => {
     if (!pendingPath) return;
