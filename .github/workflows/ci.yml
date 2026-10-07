@@ -216,12 +216,37 @@ jobs:
           skip-files: apps/api/Dockerfile.dev,apps/web/Dockerfile.dev
 
   image:
-    name: Security · build the API image and scan it
+    name: Security · build the API image, boot it, scan it
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: ci-only-postgres-password
+          POSTGRES_DB: versuitality
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v7
       - name: Build
         run: docker build -t versuitality-api:ci apps/api
+      - name: Boot the production image (migrations, RLS lock-down, health, readiness)
+        run: |
+          docker run -d --name api --network host \
+            -e DJANGO_DEBUG=0 -e DJANGO_SECRET_KEY=ci-only-secret-key-not-used-anywhere-else-0123456789 \
+            -e POSTGRES_HOST=localhost -e POSTGRES_DB=versuitality -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=ci-only-postgres-password -e PORT=8080 \
+            -e DJANGO_CORS_ORIGINS=https://example.vercel.app \
+            versuitality-api:ci
+          for i in $(seq 1 40); do curl -sf http://localhost:8080/api/health/ >/dev/null && break; sleep 2; done
+          curl -sf http://localhost:8080/api/health/
+          curl -sf http://localhost:8080/api/readiness/ | tee /dev/stderr | grep -q '"ok"'
+          docker logs api 2>&1 | grep -E "RLS enabled|applying migrations" || true
+      - name: Container logs on failure
+        if: failure()
+        run: docker logs api || true
       - name: Scan the image (Trivy)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:

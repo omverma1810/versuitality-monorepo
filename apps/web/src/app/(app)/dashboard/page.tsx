@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
+import type { Route } from 'next';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -56,6 +57,31 @@ const ROLE_NEXT_STEPS: Record<Role, string[]> = {
   accountant: [
     'Open Analytics for revenue trends, garment mix, and stage funnel',
     'Export the date-range orders workbook for offline review',
+  ],
+};
+
+const QUICK_ACTIONS: Record<Role, { label: string; href: Route }[]> = {
+  admin: [
+    { label: 'Register a client', href: '/clients/new' },
+    { label: 'Create an order', href: '/orders/new' },
+    { label: 'Invite a teammate', href: '/admin/users' },
+  ],
+  staff: [
+    { label: 'Register a client', href: '/clients/new' },
+    { label: 'Create an order', href: '/orders/new' },
+    { label: 'Book an appointment', href: '/appointments/new' },
+  ],
+  master: [
+    { label: 'Open the production board', href: '/orders' },
+    { label: 'Check fabric stock', href: '/inventory' },
+  ],
+  qa: [
+    { label: 'Open the QC queue', href: '/qa' },
+    { label: 'View orders', href: '/orders' },
+  ],
+  accountant: [
+    { label: 'Open analytics', href: '/admin/analytics' },
+    { label: 'View orders', href: '/orders' },
   ],
 };
 
@@ -336,27 +362,20 @@ export default function DashboardPage() {
           transition={{ duration: 0.5, delay: 0.15 }}
           className="glass-panel p-6"
         >
-          <h2 className="mb-4 font-display text-xl">Brand</h2>
-          <dl className="space-y-3 text-sm">
-            <div className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2">
-              <dt className="text-foreground/50">Order ID</dt>
-              <dd className="font-mono text-xs text-gold-300">VS-YYYYMMDD-XXXX</dd>
-            </div>
-            <div className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2">
-              <dt className="text-foreground/50">Gold</dt>
-              <dd className="flex items-center gap-2 font-mono text-xs">
-                <span className="h-3 w-3 rounded-full bg-gold-500 ring-1 ring-white/20" />
-                #CBA624
-              </dd>
-            </div>
-            <div className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2">
-              <dt className="text-foreground/50">Navy</dt>
-              <dd className="flex items-center gap-2 font-mono text-xs">
-                <span className="h-3 w-3 rounded-full bg-navy-600 ring-1 ring-white/20" />
-                #261F53
-              </dd>
-            </div>
-          </dl>
+          <h2 className="mb-4 font-display text-xl">Quick actions</h2>
+          <ul className="space-y-3 text-sm">
+            {QUICK_ACTIONS[user.role].map((a) => (
+              <li key={a.href}>
+                <Link
+                  href={a.href}
+                  className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2.5 text-foreground/80 transition-colors hover:border-gold-500/30 hover:bg-white/[0.06]"
+                >
+                  {a.label}
+                  <ArrowUpRight className="h-4 w-4 text-gold-400" />
+                </Link>
+              </li>
+            ))}
+          </ul>
         </motion.div>
       </section>
     </div>
