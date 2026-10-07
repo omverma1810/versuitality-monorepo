@@ -20,7 +20,7 @@ openpyxl==3.1.5
 Pillow==12.3.0
 
 # Notifications (used in Phase 6)
-sendgrid==6.11.0
+sendgrid==6.12.5
 twilio==9.3.7
 
 # Dev
