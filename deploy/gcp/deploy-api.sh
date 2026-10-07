@@ -86,10 +86,26 @@ gcloud secrets add-iam-policy-binding "$SECRET_DJANGO" \
 upsert_secret "$SECRET_DB" "$DB_PASSWORD"
 [ -n "${SEED_OWNER_PASSWORD:-}" ] && upsert_secret "$SECRET_SEED" "$SEED_OWNER_PASSWORD"
 
-# Source deploys build with the default compute service account on newer projects.
-gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-  --member "serviceAccount:$RUNTIME_SA" --role roles/cloudbuild.builds.builder \
-  --condition=None >/dev/null 2>&1 || true
+say "Granting the build/runtime service account its roles"
+# Source deploys build as the default compute service account. Newer projects no
+# longer give it these roles, and the build then fails with "default service
+# account is missing required IAM permissions" / "could not resolve source".
+grant_role() { # role required|optional
+  if ! gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+      --member "serviceAccount:$RUNTIME_SA" --role "$1" --condition=None >/dev/null; then
+    if [ "$2" = required ]; then
+      die "Could not grant $1 to $RUNTIME_SA. You need Owner (or Project IAM Admin) on $PROJECT_ID."
+    fi
+    echo "  (skipped optional role $1)"
+  fi
+}
+for role in roles/cloudbuild.builds.builder roles/storage.objectViewer \
+            roles/artifactregistry.writer roles/logging.logWriter; do
+  grant_role "$role" required
+done
+grant_role roles/run.builder optional
+echo "Waiting 40s for IAM changes to propagate..."
+sleep 40
 
 DB_ENV="POSTGRES_HOST=$DB_HOST|POSTGRES_PORT=$DB_PORT|POSTGRES_USER=$DB_USER|POSTGRES_DB=$DB_NAME|POSTGRES_SSLMODE=require"
 [ -n "$DB_POOLER_MODE" ] && DB_ENV="$DB_ENV|POSTGRES_POOLER_MODE=$DB_POOLER_MODE"
