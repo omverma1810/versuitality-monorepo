@@ -9,6 +9,7 @@ whitenoise==6.8.2
 # Real-time (used in Phase 4)
 channels==4.1.0
 channels-redis==4.2.1
+msgpack==1.2.1  # transitive of channels-redis; pinned past GHSA-6v7p-g79w-8964
 daphne==4.2.2
 
 # Auth (used in Phase 1)

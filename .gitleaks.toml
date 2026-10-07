@@ -1,0 +1,11 @@
+title = "versuitality gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Throwaway passwords used by the automated test suites (never real credentials)"
+paths = [
+  '''apps/api/tests/''',
+  '''apps/web/e2e/''',
+]

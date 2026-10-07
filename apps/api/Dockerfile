@@ -11,13 +11,18 @@ WORKDIR /app
 
 # psycopg[binary] and Pillow ship wheels, so no compiler / libpq needed.
 COPY requirements.txt ./
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 COPY . .
 
 # Collect admin/DRF static files so WhiteNoise can serve them. The values are
 # placeholders used only for this build step; real ones come from Cloud Run.
 RUN DJANGO_DEBUG=0 DJANGO_SECRET_KEY=build-only python manage.py collectstatic --noinput
+
+# The runtime image needs no package manager: dropping pip and the bundled
+# setuptools wheel removes their vendored libraries from the attack surface.
+RUN pip uninstall -y pip setuptools wheel >/dev/null 2>&1 || true \
+    && rm -rf /usr/local/lib/python3.12/ensurepip
 
 RUN sed -i 's/\r$//' /app/entrypoint.prod.sh && chmod +x /app/entrypoint.prod.sh \
     && useradd --system --uid 10001 app \
