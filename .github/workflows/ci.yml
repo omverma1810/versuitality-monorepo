@@ -212,6 +212,8 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: '1'
           skip-dirs: node_modules,apps/web/node_modules,apps/api/tests
+          # Local docker-compose dev images run as root on purpose; only the production image ships.
+          skip-files: apps/api/Dockerfile.dev,apps/web/Dockerfile.dev
 
   image:
     name: Security · build the API image and scan it
