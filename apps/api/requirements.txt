@@ -4,6 +4,7 @@ django-cors-headers==4.6.0
 django-environ==0.11.2
 psycopg[binary]==3.2.3
 gunicorn==23.0.0
+whitenoise==6.8.2
 
 # Real-time (used in Phase 4)
 channels==4.1.0

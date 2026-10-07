@@ -51,31 +51,35 @@ class ReadinessView(APIView):
         except Exception as exc:  # pragma: no cover - defensive
             checks['postgres'] = {'status': 'fail', 'detail': str(exc)[:300]}
 
-        # Redis (via the channel layer the WS uses).
+        # Channel layer broker (Redis, or the single-instance in-memory layer).
         try:
-            from channels.layers import get_channel_layer
+            from django.conf import settings
 
-            layer = get_channel_layer()
-            if layer is None:
-                checks['redis'] = {'status': 'skipped', 'detail': 'no channel layer configured'}
+            backend = settings.CHANNEL_LAYERS['default']['BACKEND']
+            if 'InMemory' in backend:
+                checks['redis'] = {
+                    'status': 'skipped',
+                    'detail': 'in-memory channel layer (single instance)',
+                }
             else:
-                # Build a fresh sync client to ping the broker without
-                # crossing async boundaries — just a connectivity smoke test.
-                try:
-                    import redis  # type: ignore
-                    from django.conf import settings
+                import redis  # type: ignore
 
-                    client = redis.Redis(
-                        host=getattr(settings, 'REDIS_HOST', 'localhost'),
-                        port=getattr(settings, 'REDIS_PORT', 6379),
+                if settings.REDIS_URL:
+                    client = redis.Redis.from_url(
+                        settings.REDIS_URL,
                         socket_connect_timeout=1.5,
                         socket_timeout=1.5,
                     )
-                    client.ping()
-                    checks['redis'] = {'status': 'ok'}
-                except Exception as exc:
-                    checks['redis'] = {'status': 'fail', 'detail': str(exc)[:300]}
-        except Exception as exc:  # pragma: no cover - defensive
+                else:
+                    client = redis.Redis(
+                        host=settings.REDIS_HOST,
+                        port=settings.REDIS_PORT,
+                        socket_connect_timeout=1.5,
+                        socket_timeout=1.5,
+                    )
+                client.ping()
+                checks['redis'] = {'status': 'ok'}
+        except Exception as exc:
             checks['redis'] = {'status': 'fail', 'detail': str(exc)[:300]}
 
         failed = [k for k, v in checks.items() if v['status'] == 'fail']

@@ -305,3 +305,64 @@ orders, etc.) and the seeded fabrics + appointments before re-seeding.
 - [ ] `SENDGRID_*` + `TWILIO_*` rotated to live credentials
 - [ ] S3 bucket has appropriate lifecycle / encryption rules
 - [ ] Audit log reviewed weekly for anomalous activity
+
+---
+
+## 11. Managed deployment: Cloud Run + Supabase + Vercel
+
+This is the setup used for the hosted test environment.
+
+| Piece | Where | Notes |
+| --- | --- | --- |
+| Web (Next.js) | Vercel project `versuitality-monorepo-web` | `NEXT_PUBLIC_API_BASE_URL` points at the API |
+| API (Django + Channels) | Cloud Run service `versuitality-api`, project `versuitality` | built from `apps/api/Dockerfile` |
+| Database | Supabase Postgres | TLS required (`POSTGRES_SSLMODE=require`) |
+| Secrets | Secret Manager | `versuitality-django-secret`, `versuitality-db-password`, `versuitality-seed-owner-password` |
+
+### Deploy / redeploy the API
+
+From **Google Cloud Shell** (already signed in to gcloud):
+
+```bash
+git clone https://github.com/omverma1810/versuitality-monorepo
+cd versuitality-monorepo
+bash deploy/gcp/deploy-api.sh      # prompts (hidden) for the DB and owner passwords
+```
+
+The script enables the APIs, stores the passwords in Secret Manager, builds and
+deploys the container, runs a one-off Cloud Run Job that creates the three owner
+accounts, then checks `/api/health/` and `/api/readiness/`. Re-running it is safe:
+migrations run on container start (`entrypoint.prod.sh`, never `makemigrations`),
+the Django secret is kept, and existing owners are skipped. Set `SEED_DEMO=1` to
+also load demo data, `SKIP_SEED=1` to skip account creation.
+
+The Cloud Run URL is `https://<service>-<project-number>.<region>.run.app`, so with
+the defaults it is `https://versuitality-api-275158399951.asia-south1.run.app`.
+`apps/web/vercel.json` already points there; the script warns if the real URL
+differs. If you change `REGION`/`SERVICE`, update `vercel.json` (or the Vercel
+env var) and redeploy the web app.
+
+### Supabase connection gotchas
+
+* The direct host `db.<ref>.supabase.co` is **IPv6-only** on most projects and Cloud
+  Run egresses over IPv4. If `/api/readiness/` reports `Network is unreachable`,
+  use the **Session pooler** from Supabase -> Connect: host
+  `aws-0-<region>.pooler.supabase.com`, user `postgres.<ref>`, port 5432
+  (`DB_HOST=... DB_USER=... bash deploy/gcp/deploy-api.sh`).
+* Only use the port-6543 *transaction* pooler with `DB_POOLER_MODE=transaction`
+  (disables server-side cursors and prepared statements).
+* Choose a Cloud Run `REGION` near the Supabase region to keep query latency low.
+
+### Known limits of this setup
+
+* **One instance** (`--max-instances 1`): live board updates use the in-process
+  channel layer. To scale out set `REDIS_URL` (e.g. Upstash/Memorystore) and raise it.
+* **Uploads are ephemeral**: cloth images live on the container disk and are lost on
+  redeploy/restart. Move `MEDIA` to object storage (GCS bucket via `django-storages`)
+  before relying on them.
+* `--min-instances 1` keeps WebSockets and uploads alive between requests; it has an
+  idle cost. Use `0` for a cheaper, cold-start-prone test setup.
+* Notifications stay on the console provider until SendGrid/Twilio secrets are added
+  as Cloud Run secrets (`SENDGRID_API_KEY`, `TWILIO_*`) -- see section 4.
+* Rotate the Supabase password after testing: change it in Supabase, run
+  `gcloud secrets versions add versuitality-db-password --data-file=-`, then redeploy.

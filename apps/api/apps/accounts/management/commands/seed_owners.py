@@ -6,6 +6,8 @@ Usage:
 """
 from __future__ import annotations
 
+import os
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -25,10 +27,12 @@ class Command(BaseCommand):
         parser.add_argument(
             '--activate-with-password',
             dest='password',
-            default=None,
+            default=os.environ.get('SEED_OWNER_PASSWORD') or None,
             help=(
-                'If set, owners are created already-active with this shared dev '
-                'password instead of as pending invites. For local dev only.'
+                'If set, owners are created already-active with this shared '
+                'password instead of as pending invites. Defaults to the '
+                'SEED_OWNER_PASSWORD env var so deploy jobs can inject it from '
+                'a secret store rather than the command line.'
             ),
         )
 

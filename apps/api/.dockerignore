@@ -1,0 +1,11 @@
+**/__pycache__
+*.pyc
+.venv
+venv
+media
+staticfiles
+.env
+.env.*
+db.sqlite3
+Dockerfile.dev
+entrypoint.sh

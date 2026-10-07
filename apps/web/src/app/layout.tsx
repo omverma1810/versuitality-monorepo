@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
+import { Suspense } from 'react';
 import './globals.css';
 
 import { NavigationFeedback } from '@/components/shell/navigation-feedback';
@@ -30,7 +31,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} dark`}>
       <body className="min-h-screen">
-        <NavigationFeedback />
+        {/* useSearchParams() inside NavigationFeedback must sit in a Suspense
+            boundary or every statically prerendered route fails to build. */}
+        <Suspense fallback={null}>
+          <NavigationFeedback />
+        </Suspense>
         {children}
         <ToastViewport />
       </body>

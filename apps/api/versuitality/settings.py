@@ -6,6 +6,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -13,10 +14,14 @@ env = environ.Env(
     DJANGO_DEBUG=(bool, False),
 )
 
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY', 'dev-only-not-for-production-change-me'
-)
+_DEV_SECRET_KEY = 'dev-only-not-for-production-change-me'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', _DEV_SECRET_KEY)
 DEBUG = env.bool('DJANGO_DEBUG', default=True)
+
+if not DEBUG and SECRET_KEY == _DEV_SECRET_KEY:
+    raise ImproperlyConfigured(
+        'DJANGO_SECRET_KEY must be set to a unique secret when DJANGO_DEBUG is off.'
+    )
 
 
 def _csv_env(name: str, default: str = '') -> list[str]:
@@ -73,6 +78,9 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    # Serves the collected admin/DRF static files in production (Cloud Run has
+    # no separate static host).
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -101,6 +109,17 @@ TEMPLATES = [
 WSGI_APPLICATION = 'versuitality.wsgi.application'
 ASGI_APPLICATION = 'versuitality.asgi.application'
 
+# Hosted Postgres (Supabase etc.) needs TLS: set POSTGRES_SSLMODE=require.
+# When connecting through a transaction-mode pooler (Supavisor/PgBouncer on
+# port 6543) also set POSTGRES_POOLER_MODE=transaction — server-side cursors
+# and prepared statements are not safe through that kind of pooler.
+_db_options: dict = {}
+if os.environ.get('POSTGRES_SSLMODE'):
+    _db_options['sslmode'] = os.environ['POSTGRES_SSLMODE']
+_tx_pooler = os.environ.get('POSTGRES_POOLER_MODE', '').lower() == 'transaction'
+if _tx_pooler:
+    _db_options['prepare_threshold'] = None
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -109,6 +128,9 @@ DATABASES = {
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'versuitality_dev'),
         'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        'OPTIONS': _db_options,
+        'CONN_MAX_AGE': int(os.environ.get('POSTGRES_CONN_MAX_AGE', '0')),
+        'DISABLE_SERVER_SIDE_CURSORS': _tx_pooler,
     }
 }
 
@@ -134,7 +156,21 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = BASE_DIR / os.environ.get('MEDIA_DIR', 'media')
+
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
+}
+
+# Cloud Run's filesystem is ephemeral: uploads (cloth images) are served by the
+# app itself and are lost when the instance is replaced. Fine for testing;
+# move MEDIA to object storage before relying on it. See OPERATIONS.md.
+SERVE_MEDIA_FROM_APP = DEBUG or os.environ.get('SERVE_MEDIA_FROM_APP') == '1'
+
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -178,17 +214,31 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 # --- Channels (Phase 4 — real-time order board) ---------------------------
-REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+REDIS_URL = os.environ.get('REDIS_URL', '')
+REDIS_HOST = os.environ.get('REDIS_HOST', '')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', '6379'))
 
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [(REDIS_HOST, REDIS_PORT)],
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {'hosts': [REDIS_URL]},
         },
-    },
-}
+    }
+elif REDIS_HOST:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {'hosts': [(REDIS_HOST, REDIS_PORT)]},
+        },
+    }
+else:
+    # No Redis configured: single-process in-memory layer. Live board updates
+    # then only reach clients connected to the *same* instance, so run exactly
+    # one API instance (Cloud Run --max-instances=1) or configure REDIS_URL.
+    CHANNEL_LAYERS = {
+        'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'},
+    }
 
 # --- Notifications (Phase 6) ----------------------------------------------
 # When these credentials are blank, providers fall back to the console
