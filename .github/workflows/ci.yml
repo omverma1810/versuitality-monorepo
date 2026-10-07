@@ -1,0 +1,342 @@
+name: CI / CD
+
+# Every pull request and every push to master runs the full quality + security
+# gate. A push to master that passes it is built, scanned and deployed to Cloud
+# Run automatically (see the `deploy-api` job). The web app is deployed by the
+# Vercel Git integration on the same push.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '22'
+  # Throwaway values for CI only — real secrets live in Secret Manager.
+  CI_DB_PASSWORD: ci-only-postgres-password
+  E2E_PASSWORD: E2e-CI-only-Pass-2026!
+
+jobs:
+  # ------------------------------------------------------------------ API
+  api:
+    name: API · lint, security, tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: ci-only-postgres-password
+          POSTGRES_DB: versuitality
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: apps/api
+    env:
+      DJANGO_DEBUG: '1'
+      DJANGO_SECRET_KEY: ci-only-secret-key-not-used-anywhere-else-0123456789
+      DJANGO_CORS_ORIGINS: http://localhost:3000
+      POSTGRES_HOST: localhost
+      POSTGRES_DB: versuitality
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ci-only-postgres-password
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: apps/api/requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - name: Lint (ruff)
+        run: ruff check .
+      - name: Static security analysis (bandit)
+        run: bandit -r apps versuitality -ll -q -x tests
+      - name: Dependency vulnerabilities (pip-audit, runtime deps)
+        run: pip-audit -r requirements.txt
+      - name: Tests (RBAC, orders, modules, websockets, migrations drift)
+        run: pytest --cov=apps --cov-report=term --cov-report=xml
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: api-coverage
+          path: apps/api/coverage.xml
+          if-no-files-found: ignore
+
+  # ------------------------------------------------------------------ Web
+  web:
+    name: Web · lint, types, build, audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm --filter @versuitality/web lint
+      - name: Type-check
+        run: pnpm --filter @versuitality/web typecheck
+      - name: Dependency vulnerabilities (production deps, high+)
+        run: pnpm audit --prod --audit-level high
+      - name: Production build
+        run: pnpm --filter @versuitality/web build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: https://api.example.invalid
+          NEXT_TELEMETRY_DISABLED: '1'
+
+  # ------------------------------------------------------------------ E2E
+  e2e:
+    name: E2E · Playwright (real browser, real API, real Postgres)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: ci-only-postgres-password
+          POSTGRES_DB: versuitality
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      DJANGO_DEBUG: '1'
+      DJANGO_SECRET_KEY: ci-only-secret-key-not-used-anywhere-else-0123456789
+      DJANGO_CORS_ORIGINS: http://localhost:3000
+      POSTGRES_HOST: localhost
+      POSTGRES_DB: versuitality
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ci-only-postgres-password
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: apps/api/requirements*.txt
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pip install -r apps/api/requirements.txt
+      - run: pnpm install --frozen-lockfile
+
+      - name: Migrate and seed one user per role
+        working-directory: apps/api
+        run: |
+          python manage.py migrate --noinput
+          python manage.py shell < ../web/e2e/seed_e2e.py
+
+      - name: Start the API
+        working-directory: apps/api
+        run: |
+          nohup daphne -b 127.0.0.1 -p 8000 versuitality.asgi:application > "$RUNNER_TEMP/api.log" 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:8000/api/health/ && break; sleep 1; done
+          curl -sf http://localhost:8000/api/readiness/
+
+      - name: Build and start the web app
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+        run: |
+          pnpm build
+          nohup pnpm start > "$RUNNER_TEMP/web.log" 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:3000/login >/dev/null && break; sleep 1; done
+
+      - name: Install the Playwright browser
+        working-directory: apps/web
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run the E2E suite
+        working-directory: apps/web
+        run: pnpm e2e
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Server logs on failure
+        if: failure()
+        run: |
+          echo '--- api ---'; tail -n 80 "$RUNNER_TEMP/api.log" || true
+          echo '--- web ---'; tail -n 80 "$RUNNER_TEMP/web.log" || true
+
+  # ------------------------------------------------------------- Security
+  secrets-and-config:
+    name: Security · secrets, filesystem, Dockerfile
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # gitleaks scans history
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Dockerfile lint (hadolint)
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
+        with:
+          dockerfile: apps/api/Dockerfile
+          failure-threshold: error
+      # Dependency CVEs are gated by pip-audit / pnpm audit (runtime deps) and by the
+      # image scan; this one checks infrastructure files and committed secrets.
+      - name: Misconfiguration + secret scan (Trivy, repo)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: misconfig,secret
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          skip-dirs: node_modules,apps/web/node_modules,apps/api/tests
+
+  image:
+    name: Security · build the API image and scan it
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build
+        run: docker build -t versuitality-api:ci apps/api
+      - name: Scan the image (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: versuitality-api:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+          vuln-type: os,library
+
+  # --------------------------------------------------------------- Deploy
+  deploy-api:
+    name: Deploy · API to Cloud Run
+    needs: [api, web, e2e, secrets-and-config, image]
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-api
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write # keyless auth to Google Cloud (Workload Identity Federation)
+    env:
+      PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'versuitality' }}
+      REGION: ${{ vars.GCP_REGION || 'asia-south1' }}
+      SERVICE: ${{ vars.CLOUD_RUN_SERVICE || 'versuitality-api' }}
+      AR_REPO: ${{ vars.GCP_AR_REPO || 'versuitality' }}
+      KEEP_IMAGES: '3'
+      WIF_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      DEPLOY_SA: ${{ vars.GCP_SERVICE_ACCOUNT }}
+    steps:
+      - name: Check that Google Cloud access is configured
+        id: gate
+        run: |
+          if [ -z "$WIF_PROVIDER" ] || [ -z "$DEPLOY_SA" ]; then
+            echo "::warning title=Deploy skipped::Add the repo variables GCP_WORKLOAD_IDENTITY_PROVIDER and GCP_SERVICE_ACCOUNT (printed by deploy/gcp/setup-github-deploy.sh) to enable automatic deployment."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.gate.outputs.ready == 'true'
+
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        if: steps.gate.outputs.ready == 'true'
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOY_SA }}
+
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+        if: steps.gate.outputs.ready == 'true'
+
+      - name: Build the image
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/api"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+          gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+          docker build -t "$IMAGE:${GITHUB_SHA}" -t "$IMAGE:latest" apps/api
+
+      - name: Scan the exact image being shipped (Trivy)
+        if: steps.gate.outputs.ready == 'true'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/api:${{ github.sha }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+      - name: Push
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          docker push "$IMAGE:${GITHUB_SHA}"
+          docker push "$IMAGE:latest"
+
+      - name: Deploy a new revision without traffic
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          PREVIOUS=$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.latestReadyRevisionName)' || true)
+          echo "PREVIOUS_REVISION=$PREVIOUS" >> "$GITHUB_ENV"
+          # Settings (env vars, secrets, scaling) are inherited from the live service.
+          # The container migrates the database and re-applies the RLS lock-down on start.
+          gcloud run deploy "$SERVICE" \
+            --image "$IMAGE:${GITHUB_SHA}" \
+            --region "$REGION" \
+            --no-traffic --tag candidate \
+            --quiet
+
+      - name: Smoke-test the new revision before it takes traffic
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          URL=$(gcloud run services describe "$SERVICE" --region "$REGION" --format=json | jq -r '.status.traffic[] | select(.tag=="candidate") | .url' | head -1)
+          [ -n "$URL" ] || { echo "could not resolve the candidate URL"; exit 1; }
+          echo "Candidate: $URL"
+          ok=0
+          for i in $(seq 1 24); do
+            if curl -fsS "$URL/api/health/" >/dev/null && curl -fsS "$URL/api/readiness/" | tee /dev/stderr | grep -q '"ok"'; then ok=1; break; fi
+            sleep 5
+          done
+          [ "$ok" = 1 ] || { echo "::error::The new revision is unhealthy; traffic was NOT switched."; exit 1; }
+
+      - name: Send traffic to the new revision
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          gcloud run services update-traffic "$SERVICE" --region "$REGION" --to-latest --quiet
+          gcloud run services update-traffic "$SERVICE" --region "$REGION" --remove-tags candidate --quiet || true
+          URL=$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')
+          curl -fsS "$URL/api/health/"
+          echo "### Deployed ${GITHUB_SHA::7}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Live: $URL" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Roll back if the live service is unhealthy
+        if: failure() && steps.gate.outputs.ready == 'true' && env.PREVIOUS_REVISION != ''
+        run: |
+          gcloud run services update-traffic "$SERVICE" --region "$REGION" --to-revisions "$PREVIOUS_REVISION=100" --quiet
+
+      - name: Prune old images and revisions (keep the newest ${{ env.KEEP_IMAGES }})
+        if: steps.gate.outputs.ready == 'true' && success()
+        run: bash deploy/gcp/prune-images.sh

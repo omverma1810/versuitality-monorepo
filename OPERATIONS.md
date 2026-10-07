@@ -374,3 +374,49 @@ asia-south1 --update-env-vars '^|^DJANGO_CORS_ORIGINS=a,b|DJANGO_CSRF_TRUSTED_OR
   as Cloud Run secrets (`SENDGRID_API_KEY`, `TWILIO_*`) -- see section 4.
 * Rotate the Supabase password after testing: change it in Supabase, run
   `gcloud secrets versions add versuitality-db-password --data-file=-`, then redeploy.
+
+## 12. CI/CD (GitHub Actions)
+
+Everything lives in `.github/workflows/`.
+
+| Workflow | Runs on | What it does |
+| --- | --- | --- |
+| `ci.yml` | every PR, every push to `master` | API: ruff, bandit, `pip-audit`, pytest (RBAC, orders, websockets, migration drift) against Postgres. Web: lint, type-check, `pnpm audit --prod`, production build. **E2E**: Playwright drives a real browser against a real API + Postgres. Security: gitleaks (secrets), hadolint, Trivy (config + secrets), Trivy scan of the built API image. |
+| `ci.yml` -> `deploy-api` | push to `master`, only after everything above is green | Builds the image, scans it, pushes to Artifact Registry, deploys a **no-traffic** Cloud Run revision, smoke-tests it (`/api/health/` + `/api/readiness/`), then shifts traffic. If anything fails the previous revision keeps serving. Finally prunes images/revisions (keep newest 3). |
+| `codeql.yml` | PRs, `master`, weekly | CodeQL for Python + TypeScript (Security > Code scanning). |
+| Dependabot | weekly | PRs for pip, npm, Docker base image and the actions themselves. |
+
+The **web app** is deployed by Vercel's Git integration on the same push.
+
+### One-time setup (about 3 minutes)
+
+1. In Cloud Shell: `bash deploy/gcp/setup-github-deploy.sh`. It creates the Artifact
+   Registry repo, the keyless Workload Identity trust (only this repo's `master`
+   branch can deploy), a least-privilege deployer service account, and the image
+   cleanup policy.
+2. Add the two repository **variables** it prints (`GCP_WORKLOAD_IDENTITY_PROVIDER`,
+   `GCP_SERVICE_ACCOUNT`) under Settings > Secrets and variables > Actions. No key,
+   password or token is stored in GitHub. Until they exist the deploy job skips itself
+   with a warning and CI stays green.
+3. Recommended: Settings > Branches > protect `master` and require the CI checks.
+
+### Image cost control
+
+Only the newest **3** image versions are kept, three ways: the deploy job runs
+`deploy/gcp/prune-images.sh` (also deletes old Cloud Run revisions and never touches the
+live one); an Artifact Registry **cleanup policy** enforces the same rule server-side
+(also on the legacy `cloud-run-source-deploy` repo); and a bucket lifecycle rule expires
+old build-source uploads after 7 days. Preview what would be deleted with
+`DRY_RUN=1 bash deploy/gcp/prune-images.sh`.
+
+### Running the E2E suite locally
+
+```bash
+# API (from apps/api) with a throwaway DB, then seed one user per role:
+export E2E_PASSWORD='choose-something'
+python manage.py migrate && python manage.py shell < ../web/e2e/seed_e2e.py
+daphne -p 8000 versuitality.asgi:application &
+# Web (from apps/web):
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 pnpm build && pnpm start &
+pnpm exec playwright install chromium && pnpm e2e
+```
