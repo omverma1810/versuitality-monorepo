@@ -180,7 +180,7 @@ export default function ClientProfilePage() {
 
         <div className="relative mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           <Stat label="Measurements" value={measurements.length} />
-          <Stat label="Orders" value={client.order_count ?? 0} hint="Phase 3" />
+          <Stat label="Orders" value={client.order_count ?? 0} />
           <Stat
             label="Joined"
             value={new Date(client.created_at).toLocaleDateString()}
@@ -559,8 +559,7 @@ function NotesTab({ client }: { client: Client }) {
         </p>
       ) : (
         <p className="text-sm text-foreground/40">
-          No notes yet. Inline editing of notes lands alongside Phase 3 order
-          flagging.
+          No notes recorded for this client yet.
         </p>
       )}
     </div>

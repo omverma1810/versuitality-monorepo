@@ -280,9 +280,8 @@ export default function OrdersPage() {
           <Receipt className="h-10 w-10 text-foreground/30" />
           <p className="font-display text-xl">No orders yet</p>
           <p className="max-w-md text-sm text-foreground/50">
-            Once you create your first order it will appear here. Each card is
-            a live entry — status changes will reflect in real time once
-            Phase 4 ships.
+            Once you create your first order it will appear here. Status changes
+            from the workshop and quality check show up here in real time.
           </p>
           <Link href="/orders/new">
             <Button>

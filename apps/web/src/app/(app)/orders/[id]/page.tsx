@@ -65,6 +65,8 @@ export default function OrderDetailPage() {
   const [checklistItems, setChecklistItems] = useState<QcChecklistItemDef[]>([]);
   const [notifications, setNotifications] = useState<NotificationLogEntry[]>([]);
   const userRole = useAuthStore((s) => s.user?.role);
+  // Client messages are only readable by front-of-house staff and admins.
+  const canSeeMessages = userRole === 'staff' || userRole === 'admin';
 
   useEffect(() => {
     if (!ready) return;
@@ -73,9 +75,11 @@ export default function OrderDetailPage() {
       getOrder(params.id as string),
       fetchInspections(params.id as string).catch(() => ({ results: [] as QcInspection[] })),
       fetchChecklistItems().catch(() => [] as QcChecklistItemDef[]),
-      fetchOrderNotifications(params.id as string).catch(
-        () => [] as NotificationLogEntry[],
-      ),
+      canSeeMessages
+        ? fetchOrderNotifications(params.id as string).catch(
+            () => [] as NotificationLogEntry[],
+          )
+        : Promise.resolve([] as NotificationLogEntry[]),
     ])
       .then(([o, insp, items, notifs]) => {
         if (cancelled) return;
@@ -90,7 +94,7 @@ export default function OrderDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [ready, params.id]);
+  }, [ready, params.id, canSeeMessages]);
 
   useEffect(() => {
     if (welcome) {
@@ -120,9 +124,11 @@ export default function OrderDetailPage() {
       setOrder(data.order);
       setTransitionTarget(null);
       setReason('');
-      fetchOrderNotifications(order.id)
-        .then(setNotifications)
-        .catch(() => undefined);
+      if (canSeeMessages) {
+        fetchOrderNotifications(order.id)
+          .then(setNotifications)
+          .catch(() => undefined);
+      }
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Could not update status.');
     } finally {
@@ -385,7 +391,7 @@ export default function OrderDetailPage() {
             <StatusTimeline events={order.status_events} current={order.status} />
           </section>
 
-          <NotificationLog entries={notifications} />
+          {canSeeMessages && <NotificationLog entries={notifications} />}
         </div>
       </div>
 

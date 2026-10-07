@@ -436,8 +436,7 @@ function InviteResultModal({
         </div>
 
         <p className="mb-4 text-sm text-foreground/60">
-          Email delivery ships in Phase 6. Until then, copy this link and send
-          it to <span className="text-foreground">{payload.user.full_name}</span> —
+          Copy this one-time link and send it to <span className="text-foreground">{payload.user.full_name}</span> —
           the link is single-use and expires on{' '}
           <span className="text-gold-300">
             {new Date(payload.invite.expires_at).toLocaleDateString()}

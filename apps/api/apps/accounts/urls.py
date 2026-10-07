@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from .views import (
+    AuditLogViewSet,
     InviteLookupView,
     LoginView,
     LogoutView,
@@ -13,6 +14,7 @@ from .views import (
 
 router = DefaultRouter()
 router.register('users', UserViewSet, basename='users')
+router.register('audit', AuditLogViewSet, basename='audit')
 
 urlpatterns = [
     path('auth/login/', LoginView.as_view(), name='auth-login'),

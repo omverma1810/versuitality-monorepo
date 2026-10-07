@@ -50,6 +50,18 @@ def test_one_search_box_finds_the_client(api, client_record, query):
     assert [r['id'] for r in results] == [client_record['id']]
 
 
+def test_clients_list_search_filters_the_page(api, client_record):
+    """The Clients page sends ?search=; it used to be ignored and return everyone."""
+    api[S].post('/api/clients/', {'full_name': 'Someone Else', 'mobile': '+919810000077'}, format='json')
+    assert api[S].get('/api/clients/').json()['count'] == 2
+    for term in ('aarav', '0001', 'VS-CL-'):
+        got = api[S].get('/api/clients/', {'search': term}).json()
+        assert [r['id'] for r in got['results']][:1] == [client_record['id']] or term == 'VS-CL-'
+    only = api[S].get('/api/clients/', {'search': 'aarav'}).json()
+    assert only['count'] == 1 and only['results'][0]['id'] == client_record['id']
+    assert api[S].get('/api/clients/', {'search': 'zzz-nobody'}).json()['count'] == 0
+
+
 def test_invalid_preferences_are_rejected(api):
     resp = api[S].post('/api/clients/', {'full_name': 'X Y', 'mobile': '+919810000003',
                                          'occasion_preferences': ['skydiving']}, format='json')
@@ -245,3 +257,17 @@ def test_notification_log_is_readable_by_staff(api, order):
     assert {r['channel'] for r in rows['results']} == {'email', 'whatsapp'}
     assert all(r['provider'].startswith('console:') and r['status'] == 'sent' for r in rows['results'])
     assert str(uuid.UUID(order['id']))
+
+
+# ------------------------------------------------------------------- audit log
+def test_audit_log_is_admin_only_and_records_activity(api, users):
+    api['anon'].post('/api/auth/login/', {'email': users[S].email, 'password': 'Str0ng-Test-Pass!'}, format='json')
+    got = api[A].get('/api/audit/')
+    assert got.status_code == 200 and got.json()['count'] >= 1
+    row = got.json()['results'][0]
+    assert {'action', 'actor_name', 'created_at'} <= set(row)
+    assert api[A].get('/api/audit/', {'action': 'login'}).json()['count'] >= 1
+    for role in (S, M, Q, C):
+        assert api[role].get('/api/audit/').status_code == 403
+    assert api['anon'].get('/api/audit/').status_code == 401
+    assert api[A].post('/api/audit/', {}, format='json').status_code == 405

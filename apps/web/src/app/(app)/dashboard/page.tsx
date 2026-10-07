@@ -103,17 +103,26 @@ export default function DashboardPage() {
   const [todayAppts, setTodayAppts] = useState<Appointment[]>([]);
   const [lowStock, setLowStock] = useState<Fabric[]>([]);
 
+  // Only ask for what this role may read — the API answers 403 otherwise.
+  const role = user?.role;
+  const canSeeAppointments = role === 'admin' || role === 'staff';
+  const canSeeStock = role === 'admin' || role === 'staff' || role === 'master';
+
   const refresh = useCallback(() => {
     getOrderStats()
       .then(setStats)
       .catch(() => undefined);
-    fetchTodayAppointments()
-      .then(setTodayAppts)
-      .catch(() => undefined);
-    listLowStock()
-      .then(setLowStock)
-      .catch(() => undefined);
-  }, []);
+    if (canSeeAppointments) {
+      fetchTodayAppointments()
+        .then(setTodayAppts)
+        .catch(() => undefined);
+    }
+    if (canSeeStock) {
+      listLowStock()
+        .then(setLowStock)
+        .catch(() => undefined);
+    }
+  }, [canSeeAppointments, canSeeStock]);
 
   useEffect(() => {
     refresh();
@@ -164,10 +173,7 @@ export default function DashboardPage() {
             <span className="gold-text">{firstName}.</span>
           </h1>
           <p className="max-w-2xl text-sm text-foreground/60">
-            {ROLE_DESCRIPTIONS[user.role]}. Phase 1 is live — authentication and
-            role-based access are wired end-to-end. Subsequent phases unlock
-            CRM, orders, the live production board, QA, notifications, and
-            analytics.
+            {ROLE_DESCRIPTIONS[user.role]}.
           </p>
         </div>
       </motion.section>

@@ -163,7 +163,8 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         actor = self.context['request'].user if 'request' in self.context else None
 
         for idx, item in enumerate(items):
-            line = OrderLineItem.objects.create(order=order, position=idx, **item)
+            # The client may send its own `position`; the server order wins.
+            line = OrderLineItem.objects.create(order=order, **{**item, 'position': idx})
             # Auto-deduct fabric stock when both the bolt and a meter count are
             # supplied. Failures (insufficient stock) bubble up via the atomic
             # transaction so the entire order create rolls back cleanly.

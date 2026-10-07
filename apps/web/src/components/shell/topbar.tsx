@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, LogOut, Sparkles } from 'lucide-react';
+import { LogOut, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -71,16 +71,6 @@ export function Topbar() {
         <span className="opacity-50">·</span>
         <span>{now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
       </div>
-
-      <button
-        type="button"
-        className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-foreground/60 transition-colors hover:bg-white/10 hover:text-foreground"
-        aria-label="Notifications (coming in Phase 6)"
-        title="Notifications coming in Phase 6"
-      >
-        <Bell className="h-4 w-4" />
-        <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-gold-400" />
-      </button>
 
       <div ref={menuRef} className="relative">
         <button

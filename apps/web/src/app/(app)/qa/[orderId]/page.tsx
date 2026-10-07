@@ -471,7 +471,7 @@ function ConfirmModal({
           {isPass ? (
             <>
               The order will move to &ldquo;Ready for delivery&rdquo; and the
-              client will be notified once messaging ships in Phase 6.
+              client is notified automatically.
             </>
           ) : (
             <>

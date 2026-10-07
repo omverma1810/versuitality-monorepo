@@ -58,3 +58,8 @@ coverage/
 # Docker
 docker-data/
 .vercel
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/

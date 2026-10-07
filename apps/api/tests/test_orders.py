@@ -136,3 +136,23 @@ def test_internal_qc_steps_do_not_message_the_client(api, order):
     keys = set(Notification.objects.filter(order_id=order['id']).values_list('template_key', flat=True))
     assert 'ready_for_qc' not in keys and 'qc_rejected' not in keys
     assert Order.objects.get(pk=order['id']).status == 'qc_rejected'
+
+
+def test_order_create_accepts_a_client_supplied_position(api, client_record):
+    """The web wizard sends `position` on each line; this used to 500."""
+    resp = api[S].post('/api/orders/', {
+        'client': client_record['id'], 'order_type': 'full',
+        'line_items': [
+            {'garment_type': 'shirt', 'quantity': 1, 'unit_price': '100', 'position': 0, 'meters_used': 0},
+            {'garment_type': 'trouser', 'quantity': 1, 'unit_price': '200', 'position': 1, 'meters_used': 0},
+        ],
+    }, format='json')
+    assert resp.status_code == 201, resp.content
+    assert [li['position'] for li in resp.json()['line_items']] == [0, 1]
+
+
+def test_pdf_receipt_works_without_a_linked_measurement_set(api, make_order):
+    """Linking a measurement set is optional in the wizard; the receipt must still render."""
+    bare = make_order(measurement_set=None)
+    resp = api[S].get(f'/api/orders/{bare["id"]}/pdf/')
+    assert resp.status_code == 200 and resp.content[:4] == b'%PDF'

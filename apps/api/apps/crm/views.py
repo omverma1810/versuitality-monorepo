@@ -14,6 +14,17 @@ from .serializers import ClientSerializer, ClientSummarySerializer
 from .utils import normalise_mobile
 
 
+def _search_clauses(q: str) -> Q:
+    """Name / client id / email / mobile (full digits or last four) match."""
+    digits_only = ''.join(ch for ch in q if ch.isdigit())
+    clauses = Q(full_name__icontains=q) | Q(client_id__icontains=q) | Q(email__icontains=q)
+    if digits_only:
+        clauses |= Q(mobile__icontains=digits_only)
+        if len(digits_only) >= 4:
+            clauses |= Q(mobile__endswith=digits_only[-4:])
+    return clauses
+
+
 def _annotate(qs):
     return qs.annotate(
         measurement_count=Count('measurements', distinct=True),
@@ -32,7 +43,11 @@ class ClientViewSet(viewsets.ModelViewSet):
     lookup_field = 'pk'
 
     def get_queryset(self):
-        return _annotate(super().get_queryset())
+        qs = _annotate(super().get_queryset())
+        term = (self.request.query_params.get('search') or '').strip()
+        if term and self.action == 'list':
+            qs = qs.filter(_search_clauses(term))
+        return qs
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
@@ -45,16 +60,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         if not q:
             return Response({'results': []})
 
-        digits_only = ''.join(ch for ch in q if ch.isdigit())
-        clauses = (
-            Q(full_name__icontains=q)
-            | Q(client_id__icontains=q)
-            | Q(email__icontains=q)
-        )
-        if digits_only:
-            clauses |= Q(mobile__icontains=digits_only)
-            if len(digits_only) >= 4:
-                clauses |= Q(mobile__endswith=digits_only[-4:])
+        clauses = _search_clauses(q)
 
         qs = Client.objects.filter(clauses).distinct()[:limit]
         return Response({'results': ClientSummarySerializer(qs, many=True).data})

@@ -11,9 +11,10 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .audit import AuditAction, record
-from .models import InviteToken, User
+from .models import AuditLog, InviteToken, User
 from .permissions import IsAdmin, IsAuthenticatedActive
 from .serializers import (
+    AuditLogSerializer,
     InviteUserSerializer,
     LoginSerializer,
     MeSerializer,
@@ -226,3 +227,27 @@ class UserViewSet(viewsets.ModelViewSet):
                 'setup_url': f'/setup-password?token={invite.token}',
             }
         )
+
+
+class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
+    """Admin-only, read-only window onto the append-only audit trail."""
+
+    permission_classes = [IsAdmin]
+    serializer_class = AuditLogSerializer
+
+    def get_queryset(self):
+        qs = AuditLog.objects.select_related('actor', 'target_user')
+        action_filter = self.request.query_params.get('action')
+        if action_filter:
+            qs = qs.filter(action=action_filter)
+        q = (self.request.query_params.get('q') or '').strip()
+        if q:
+            from django.db.models import Q
+
+            qs = qs.filter(
+                Q(actor__email__icontains=q)
+                | Q(actor__full_name__icontains=q)
+                | Q(target_user__full_name__icontains=q)
+                | Q(action__icontains=q)
+            )
+        return qs

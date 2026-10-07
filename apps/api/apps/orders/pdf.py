@@ -160,7 +160,7 @@ def _items_table(order: Order, styles):
 def _measurements_block(order: Order, styles):
     ms = order.measurement_set
     if ms is None:
-        return Paragraph('No measurement set linked to this order.', styles['VSBody'])
+        return [Paragraph('No measurement set linked to this order.', styles['VSBody'])]
 
     upper = [
         ('Length', ms.upper_length),

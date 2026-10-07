@@ -4,7 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
-from .models import InviteToken, Role, User
+from .models import AuditLog, InviteToken, Role, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -72,3 +72,26 @@ class SetupPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError({'password': list(exc.messages)})
         attrs['invite'] = invite
         return attrs
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    actor_name = serializers.SerializerMethodField()
+    actor_email = serializers.SerializerMethodField()
+    target_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AuditLog
+        fields = (
+            'id', 'action', 'actor_name', 'actor_email', 'target_name',
+            'metadata', 'ip_address', 'created_at',
+        )
+        read_only_fields = fields
+
+    def get_actor_name(self, obj):
+        return obj.actor.full_name if obj.actor_id else 'System'
+
+    def get_actor_email(self, obj):
+        return obj.actor.email if obj.actor_id else ''
+
+    def get_target_name(self, obj):
+        return obj.target_user.full_name if obj.target_user_id else ''
