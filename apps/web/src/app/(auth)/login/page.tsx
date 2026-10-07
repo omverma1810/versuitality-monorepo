@@ -9,7 +9,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { Logo } from '@/components/brand/logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ApiError } from '@/lib/api';
+import { API_BASE, ApiError } from '@/lib/api';
 import { login } from '@/lib/auth';
 import { beginNavigation } from '@/store/navigationStore';
 import { toast } from '@/store/toastStore';
@@ -36,7 +36,9 @@ export default function LoginPage() {
   }, [hydrated, access, user, router]);
 
   useEffect(() => {
-    fetch('/api/health/')
+    // Call the API directly (same path real requests take, so CORS is tested
+    // too). The /api rewrite loops on trailing slashes against Django.
+    fetch(`${API_BASE}/api/health/`)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
       .then(setHealth)
       .catch((e) => setHealthError(String(e)));
