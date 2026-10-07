@@ -30,7 +30,7 @@ DB_NAME="${DB_NAME:-postgres}"
 DB_POOLER_MODE="${DB_POOLER_MODE:-}"      # set to "transaction" only for port 6543
 
 # Browser origins allowed to call the API (CORS + WebSockets).
-WEB_ORIGINS="${WEB_ORIGINS:-https://versuitality-monorepo-web-om-vermas-projects.vercel.app,https://versuitality-monorepo-web-git-master-om-vermas-projects.vercel.app}"
+WEB_ORIGINS="${WEB_ORIGINS:-https://versuitality-monorepo-web.vercel.app,https://versuitality-monorepo-web-om-vermas-projects.vercel.app,https://versuitality-monorepo-web-git-master-om-vermas-projects.vercel.app}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 API_DIR="$REPO_ROOT/apps/api"
@@ -165,15 +165,16 @@ EOF
   exit 1
 fi
 
-EXPECTED="$(sed -n 's/.*"NEXT_PUBLIC_API_BASE_URL": *"\([^"]*\)".*/\1/p' "$REPO_ROOT/apps/web/vercel.json")"
 cat <<EOF
 
 API is live:  $URL
+(also served at https://${SERVICE}-${PROJECT_NUMBER}.${REGION}.run.app -- both URLs work)
 
-Next step -- point the web app at it (skip if the values already match):
-  apps/web/vercel.json currently has: ${EXPECTED:-<unset>}
-  Set NEXT_PUBLIC_API_BASE_URL=$URL in the Vercel project
-  (Settings -> Environment Variables) or in apps/web/vercel.json, then redeploy.
+The web app reads the API address from the NEXT_PUBLIC_API_BASE_URL environment
+variable of the Vercel project (Settings -> Environment Variables). It must be
+$URL
+and the web app must be redeployed after any change, because Next.js bakes it in
+at build time. (An "env" block in vercel.json is NOT applied at build time.)
 
 Sign in with  sirish@versuitality.com / tripti@versuitality.com / rahul@versuitality.com
 using the owner password you entered. Rotate the Supabase password when testing is done.

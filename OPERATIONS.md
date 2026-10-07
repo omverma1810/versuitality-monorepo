@@ -336,11 +336,19 @@ migrations run on container start (`entrypoint.prod.sh`, never `makemigrations`)
 the Django secret is kept, and existing owners are skipped. Set `SEED_DEMO=1` to
 also load demo data, `SKIP_SEED=1` to skip account creation.
 
-The Cloud Run URL is `https://<service>-<project-number>.<region>.run.app`, so with
-the defaults it is `https://versuitality-api-275158399951.asia-south1.run.app`.
-`apps/web/vercel.json` already points there; the script warns if the real URL
-differs. If you change `REGION`/`SERVICE`, update `vercel.json` (or the Vercel
-env var) and redeploy the web app.
+Cloud Run serves the service on two equivalent URLs: the deterministic
+`https://<service>-<project-number>.<region>.run.app` and the hashed one printed by
+`gcloud run services describe` (`https://versuitality-api-<hash>-el.a.run.app`).
+
+The web app finds the API through the **Vercel project environment variable
+`NEXT_PUBLIC_API_BASE_URL`** (Settings -> Environment Variables, Production and
+Preview). Next.js bakes it into the bundle at build time, so redeploy the web app
+after changing it. Do not use an `env` block in `vercel.json` for this -- it is not
+applied at build time and the app silently falls back to `http://localhost:8000`.
+The API must also allow the web origin: `DJANGO_CORS_ORIGINS` /
+`DJANGO_CSRF_TRUSTED_ORIGINS` default to the project's Vercel aliases; to add one
+without redeploying use `gcloud run services update versuitality-api --region
+asia-south1 --update-env-vars '^|^DJANGO_CORS_ORIGINS=a,b|DJANGO_CSRF_TRUSTED_ORIGINS=a,b'`.
 
 ### Supabase connection gotchas
 
