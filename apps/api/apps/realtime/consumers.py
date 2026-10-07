@@ -4,7 +4,6 @@ from __future__ import annotations
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.utils import timezone
 
-
 ORDER_BOARD_GROUP = 'orders.board'
 
 

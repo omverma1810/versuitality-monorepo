@@ -34,9 +34,7 @@ const remotePatterns = [
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@versuitality/ui', '@versuitality/types'],
-  experimental: {
-    typedRoutes: true,
-  },
+  typedRoutes: true,
   images: {
     remotePatterns,
   },

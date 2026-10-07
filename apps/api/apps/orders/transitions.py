@@ -18,7 +18,6 @@ from .models import (
     OrderStatusEvent,
 )
 
-
 # Which roles are allowed to drive each transition (admin always allowed).
 TRANSITION_ROLES: dict[tuple[str, str], set[str]] = {
     (OrderStatus.ORDER_RECEIVED, OrderStatus.REQUIREMENTS_NOTED): {Role.MASTER, Role.STAFF},
@@ -53,17 +52,17 @@ def transition_order(*, order: Order, target: str, actor, reason: str = '') -> O
     if order.status == target:
         raise ValidationError({'detail': 'Order is already in this status.'})
 
-    if target not in ALLOWED_TRANSITIONS.get(order.status, set()):
-        # Admins may force-set any status, including non-adjacent.
-        if not (actor and (actor.is_superuser or actor.role == Role.ADMIN)):
-            raise ValidationError(
-                {
-                    'detail': (
-                        f'Transition {order.status} → {target} is not allowed. '
-                        'Reach the target status by following the production flow.'
-                    )
-                }
-            )
+    # Admins may force-set any status, including non-adjacent.
+    is_admin = bool(actor and (actor.is_superuser or actor.role == Role.ADMIN))
+    if target not in ALLOWED_TRANSITIONS.get(order.status, set()) and not is_admin:
+        raise ValidationError(
+            {
+                'detail': (
+                    f'Transition {order.status} → {target} is not allowed. '
+                    'Reach the target status by following the production flow.'
+                )
+            }
+        )
 
     if not can_transition(actor, order.status, target):
         raise PermissionDenied('Your role cannot perform this transition.')

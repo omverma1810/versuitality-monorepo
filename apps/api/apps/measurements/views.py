@@ -3,7 +3,8 @@ from __future__ import annotations
 from rest_framework import viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 
-from apps.accounts.permissions import IsAuthenticatedActive
+from apps.accounts.models import Role
+from apps.accounts.permissions import RoleMatrixPermission
 
 from .models import MeasurementSet
 from .serializers import MeasurementSetSerializer
@@ -12,7 +13,9 @@ from .serializers import MeasurementSetSerializer
 class MeasurementSetViewSet(viewsets.ModelViewSet):
     queryset = MeasurementSet.objects.select_related('client', 'created_by').all()
     serializer_class = MeasurementSetSerializer
-    permission_classes = [IsAuthenticatedActive]
+    permission_classes = [RoleMatrixPermission]
+    read_roles = (Role.STAFF, Role.MASTER)
+    write_roles = (Role.STAFF,)
     parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def get_queryset(self):

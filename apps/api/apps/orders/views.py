@@ -5,15 +5,17 @@ from datetime import datetime, timedelta
 from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.utils import timezone
-from rest_framework import status as drf_status, viewsets
+from rest_framework import status as drf_status
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.accounts.permissions import IsAuthenticatedActive
+from apps.accounts.models import Role
+from apps.accounts.permissions import RoleMatrixPermission
 from apps.notifications.services import notify_order_created
 from apps.realtime.broadcaster import order_created as broadcast_order_created
 
-from .models import ALLOWED_TRANSITIONS, Order, OrderStatus, PRODUCTION_FLOW
+from .models import ALLOWED_TRANSITIONS, PRODUCTION_FLOW, Order, OrderStatus
 from .pdf import render_order_pdf
 from .serializers import (
     OrderCreateSerializer,
@@ -28,15 +30,34 @@ def _annotate(qs):
     return qs.annotate(line_item_count=Count('line_items', distinct=True))
 
 
+def _role_scope(qs, user):
+    """QA only sees orders awaiting inspection plus ones they inspected."""
+    if getattr(user, 'role', None) == Role.QA and not user.is_superuser:
+        qs = qs.filter(
+            Q(status=OrderStatus.READY_FOR_QC) | Q(qc_inspections__inspector=user)
+        ).distinct()
+    return qs
+
+
 class OrderViewSet(viewsets.ModelViewSet):
+    """Orders are created and moved through the state machine only -- never
+    edited or deleted over the API (PUT/PATCH/DELETE would bypass the audit trail)."""
+
     queryset = Order.objects.select_related('client', 'created_by').prefetch_related(
         'line_items', 'status_events'
     )
-    permission_classes = [IsAuthenticatedActive]
+    permission_classes = [RoleMatrixPermission]
+    read_roles = (Role.STAFF, Role.MASTER, Role.QA, Role.ACCOUNTANT)
+    write_roles = (Role.STAFF,)
+    action_roles = {
+        'transition': (Role.STAFF, Role.MASTER, Role.QA),  # exact rules in transitions.py
+        'pdf': (Role.STAFF, Role.MASTER, Role.ACCOUNTANT),  # includes measurements
+    }
+    http_method_names = ['get', 'post', 'head', 'options']
     lookup_field = 'pk'
 
     def get_queryset(self):
-        qs = _annotate(super().get_queryset())
+        qs = _role_scope(_annotate(super().get_queryset()), self.request.user)
         params = self.request.query_params
 
         if status := params.get('status'):
@@ -121,14 +142,13 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def stats(self, request):
-        qs = Order.objects.values('status').annotate(c=Count('id'))
+        scoped = _role_scope(Order.objects.all(), request.user)
+        qs = scoped.order_by().values('status').annotate(c=Count('id', distinct=True))
         by_status = {row['status']: row['c'] for row in qs}
         total = sum(by_status.values())
         today = timezone.localdate()
-        delivered_today = Order.objects.filter(
-            delivered_at__date=today
-        ).count()
-        last_7 = Order.objects.filter(
+        delivered_today = scoped.filter(delivered_at__date=today).count()
+        last_7 = scoped.filter(
             created_at__gte=timezone.now() - timedelta(days=7)
         ).count()
         active = total - by_status.get(OrderStatus.DELIVERED, 0)

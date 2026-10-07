@@ -11,7 +11,7 @@ import os
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from apps.accounts.models import InviteToken, Role, User
+from apps.accounts.models import Role, User
 
 OWNERS = [
     {'full_name': 'Sirish Kumar Golem', 'email': 'sirish@versuitality.com'},

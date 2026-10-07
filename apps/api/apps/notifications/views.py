@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from rest_framework import viewsets
 
-from apps.accounts.permissions import IsAuthenticatedActive
+from apps.accounts.models import Role
+from apps.accounts.permissions import RoleMatrixPermission
 
 from .models import Notification
 from .serializers import NotificationSerializer
@@ -13,7 +14,9 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Notification.objects.select_related('order').all()
     serializer_class = NotificationSerializer
-    permission_classes = [IsAuthenticatedActive]
+    permission_classes = [RoleMatrixPermission]
+    read_roles = (Role.STAFF,)
+    write_roles = ()
 
     def get_queryset(self):
         qs = super().get_queryset()

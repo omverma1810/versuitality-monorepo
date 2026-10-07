@@ -5,7 +5,8 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.accounts.permissions import IsAuthenticatedActive
+from apps.accounts.models import Role
+from apps.accounts.permissions import RoleMatrixPermission
 from apps.measurements.exports import build_measurement_workbook
 
 from .models import Client
@@ -21,10 +22,12 @@ def _annotate(qs):
 
 
 class ClientViewSet(viewsets.ModelViewSet):
-    """Client CRM. All authenticated active staff can read; staff/admin can write."""
+    """Client CRM. Staff and the master can read; staff (and admin) can write."""
 
     queryset = Client.objects.all()
-    permission_classes = [IsAuthenticatedActive]
+    permission_classes = [RoleMatrixPermission]
+    read_roles = (Role.STAFF, Role.MASTER)
+    write_roles = (Role.STAFF,)
     serializer_class = ClientSerializer
     lookup_field = 'pk'
 

@@ -19,7 +19,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from .models import Order, OrderStatus, PRODUCTION_FLOW
+from .models import PRODUCTION_FLOW, Order, OrderStatus
 
 GOLD = colors.HexColor('#CBA624')
 GOLD_SOFT = colors.HexColor('#F6EBB7')

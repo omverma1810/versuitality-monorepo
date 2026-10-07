@@ -2,7 +2,7 @@
   "name": "versuitality-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "Versuitality — internal bespoke tailoring operations platform",
+  "description": "Versuitality \u2014 internal bespoke tailoring operations platform",
   "packageManager": "pnpm@9.12.0",
   "engines": {
     "node": ">=20",
@@ -19,5 +19,12 @@
   "devDependencies": {
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss": ">=8.5.23",
+      "nanoid": ">=3.3.18",
+      "source-map-js": ">=1.2.2"
+    }
   }
 }

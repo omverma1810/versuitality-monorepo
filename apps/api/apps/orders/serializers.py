@@ -8,13 +8,13 @@ from rest_framework import serializers
 from apps.crm.serializers import ClientSummarySerializer
 
 from .models import (
+    ALLOWED_TRANSITIONS,
+    PRODUCTION_FLOW,
+    Order,
     OrderLineItem,
     OrderStatus,
     OrderStatusEvent,
     OrderType,
-    Order,
-    PRODUCTION_FLOW,
-    ALLOWED_TRANSITIONS,
 )
 
 
@@ -155,8 +155,8 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        from apps.inventory.services import adjust_stock
         from apps.inventory.models import UsageKind
+        from apps.inventory.services import adjust_stock
 
         items = validated_data.pop('line_items')
         order = Order.objects.create(**validated_data)

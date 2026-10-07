@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Phone, Search, UserCircle2, X } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 import { Avatar } from '@/components/ui/avatar';
@@ -94,23 +95,23 @@ export function ClientPicker({ selected, onSelect }: Props) {
           <p className="flex items-center gap-2 px-3 py-3 text-xs text-foreground/40">
             <UserCircle2 className="h-4 w-4" />
             Pick the client this order is for, or
-            <a
+            <Link
               href="/clients/new"
               className="text-gold-300 underline-offset-2 hover:underline"
             >
               register a new walk-in
-            </a>
+            </Link>
             .
           </p>
         ) : results.length === 0 ? (
           <p className="px-3 py-3 text-xs text-foreground/40">
             No clients match “{q}”. Try a different spelling or
-            <a
+            <Link
               href="/clients/new"
               className="ml-1 text-gold-300 underline-offset-2 hover:underline"
             >
               register a new client
-            </a>
+            </Link>
             .
           </p>
         ) : (

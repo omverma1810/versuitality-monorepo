@@ -254,6 +254,9 @@ TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
 TWILIO_WHATSAPP_FROM = os.environ.get('TWILIO_WHATSAPP_FROM', '')
 
 # --- Versuitality config ---------------------------------------------------
+# Country code assumed for 10-digit mobile numbers typed without one.
+DEFAULT_COUNTRY_CODE = os.environ.get('DEFAULT_COUNTRY_CODE', '91')
+
 VERSUITALITY = {
     'BRAND_NAME': 'Versuitality',
     'ORDER_ID_PREFIX': 'VS',

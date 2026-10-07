@@ -5,7 +5,8 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.accounts.permissions import IsAuthenticatedActive
+from apps.accounts.models import Role
+from apps.accounts.permissions import RoleMatrixPermission
 
 from .models import Fabric, FabricUsage
 from .serializers import (
@@ -19,7 +20,10 @@ from .services import adjust_stock
 class FabricViewSet(viewsets.ModelViewSet):
     queryset = Fabric.objects.all()
     serializer_class = FabricSerializer
-    permission_classes = [IsAuthenticatedActive]
+    permission_classes = [RoleMatrixPermission]
+    read_roles = (Role.STAFF, Role.MASTER)
+    write_roles = (Role.STAFF,)
+    action_roles = {'adjust': (Role.STAFF, Role.MASTER)}  # master logs wastage / samples
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -87,7 +91,9 @@ class FabricViewSet(viewsets.ModelViewSet):
 class FabricUsageViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = FabricUsage.objects.select_related('fabric', 'actor', 'order').all()
     serializer_class = FabricUsageSerializer
-    permission_classes = [IsAuthenticatedActive]
+    permission_classes = [RoleMatrixPermission]
+    read_roles = (Role.STAFF, Role.MASTER)
+    write_roles = ()
 
     def get_queryset(self):
         qs = super().get_queryset()

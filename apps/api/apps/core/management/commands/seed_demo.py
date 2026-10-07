@@ -36,7 +36,6 @@ from apps.orders.transitions import transition_order
 from apps.qa.checklist import CHECKLIST_ITEMS
 from apps.qa.models import QcInspection, QcOutcome
 
-
 DEMO_TAG = 'demo:seeded'
 
 FABRICS = [

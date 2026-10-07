@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from django.db import transaction
-from rest_framework import status as drf_status, viewsets
+from rest_framework import status as drf_status
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.accounts.permissions import IsAuthenticatedActive, IsQA
+from apps.accounts.models import Role
+from apps.accounts.permissions import IsAuthenticatedActive, IsQA, RoleMatrixPermission
 from apps.orders.models import Order, OrderStatus
 from apps.orders.serializers import OrderListSerializer
 from apps.orders.transitions import transition_order
@@ -31,7 +33,8 @@ class QcChecklistDefinitionView(APIView):
 class QcQueueView(APIView):
     """Orders awaiting quality inspection."""
 
-    permission_classes = [IsAuthenticatedActive]
+    permission_classes = [RoleMatrixPermission]
+    read_roles = (Role.QA,)
 
     def get(self, request):
         qs = (
@@ -52,7 +55,9 @@ class QcInspectionViewSet(viewsets.ReadOnlyModelViewSet):
     """Browse historic inspections + submit new ones for the active QA queue."""
 
     queryset = QcInspection.objects.select_related('order', 'inspector').all()
-    permission_classes = [IsAuthenticatedActive]
+    permission_classes = [RoleMatrixPermission]
+    read_roles = (Role.STAFF, Role.MASTER, Role.QA, Role.ACCOUNTANT)
+    write_roles = ()
     serializer_class = QcInspectionSerializer
 
     def get_queryset(self):
@@ -71,7 +76,6 @@ class QcInspectionViewSet(viewsets.ReadOnlyModelViewSet):
         normalised = serializer.validated_data['_normalised_checklist']
         outcome = serializer.validated_data['outcome']
         comment = (serializer.validated_data.get('overall_comment') or '').strip()
-        any_fail = serializer.validated_data['_any_fail']
 
         with transaction.atomic():
             inspection = QcInspection.objects.create(

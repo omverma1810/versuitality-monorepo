@@ -8,7 +8,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.accounts.permissions import IsAuthenticatedActive
+from apps.accounts.models import Role
+from apps.accounts.permissions import RoleMatrixPermission
 
 from .models import Appointment, AppointmentStatus
 from .serializers import AppointmentSerializer, AppointmentTransitionSerializer
@@ -18,7 +19,9 @@ from .services import notify_appointment_scheduled
 class AppointmentViewSet(viewsets.ModelViewSet):
     queryset = Appointment.objects.select_related('client', 'created_by').all()
     serializer_class = AppointmentSerializer
-    permission_classes = [IsAuthenticatedActive]
+    permission_classes = [RoleMatrixPermission]
+    read_roles = (Role.STAFF,)
+    write_roles = (Role.STAFF,)
 
     def get_queryset(self):
         qs = super().get_queryset()

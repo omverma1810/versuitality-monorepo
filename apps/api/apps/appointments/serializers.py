@@ -3,9 +3,7 @@ from __future__ import annotations
 from django.utils import timezone
 from rest_framework import serializers
 
-from apps.crm.models import Client
-
-from .models import Appointment, AppointmentKind, AppointmentStatus, NotifyVia
+from .models import Appointment, AppointmentStatus, NotifyVia
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -32,6 +30,8 @@ class AppointmentSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         )
+        # full_name is snapshotted from the linked client when omitted (see validate()).
+        extra_kwargs = {'full_name': {'required': False, 'allow_blank': True}}
         read_only_fields = (
             'id',
             'created_at',
