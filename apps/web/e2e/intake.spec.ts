@@ -5,7 +5,7 @@ import { apiCall, login, uniqueMobile } from './helpers';
 test.describe('walk-in client intake', () => {
   test('staff registers a walk-in client with measurements', async ({ page }) => {
     const mobile = uniqueMobile();
-    const name = `E2E Walk-in ${mobile.slice(-4)}`;
+    const name = `E2E Walk-in ${Date.now()}`;
 
     await login(page, 'staff');
     await page.goto('/clients/new');

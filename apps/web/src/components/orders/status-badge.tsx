@@ -14,6 +14,7 @@ const TONE_CLASSES: Record<StatusTone, string> = {
   rejected: 'border-status-rejected/40 bg-status-rejected/15 text-red-200',
   ready: 'border-status-ready/40 bg-status-ready/15 text-emerald-200',
   delivered: 'border-status-delivered/40 bg-status-delivered/15 text-emerald-100',
+  cancelled: 'border-white/15 bg-white/[0.04] text-foreground/45 line-through decoration-foreground/30',
 };
 
 interface Props {

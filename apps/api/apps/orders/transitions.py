@@ -51,6 +51,10 @@ def can_transition(user, current: str, target: str) -> bool:
 def transition_order(*, order: Order, target: str, actor, reason: str = '') -> OrderStatusEvent:
     if order.status == target:
         raise ValidationError({'detail': 'Order is already in this status.'})
+    if order.status == OrderStatus.CANCELLED:
+        raise ValidationError({'detail': 'This order has been cancelled.'})
+    if target == OrderStatus.CANCELLED:
+        raise ValidationError({'detail': 'Use the cancel action (it needs a reason).'})
 
     # Admins may force-set any status, including non-adjacent.
     is_admin = bool(actor and (actor.is_superuser or actor.role == Role.ADMIN))

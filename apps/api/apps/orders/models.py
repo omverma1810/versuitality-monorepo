@@ -25,6 +25,7 @@ class OrderStatus(models.TextChoices):
     QC_REJECTED = 'qc_rejected', 'QC rejected — rework'
     READY_FOR_DELIVERY = 'ready_for_delivery', 'Ready for delivery'
     DELIVERED = 'delivered', 'Delivered'
+    CANCELLED = 'cancelled', 'Cancelled'
 
 
 # Allowed forward transitions for non-admin roles.
@@ -49,7 +50,17 @@ ALLOWED_TRANSITIONS: dict[str, set[str]] = {
     },
     OrderStatus.READY_FOR_DELIVERY: {OrderStatus.DELIVERED},
     OrderStatus.DELIVERED: set(),
+    OrderStatus.CANCELLED: set(),
 }
+
+# Orders in these states are finished: no more production steps.
+TERMINAL_STATUSES = {OrderStatus.DELIVERED, OrderStatus.CANCELLED}
+
+# Garments / order type may only change before the cloth is cut.
+GARMENT_EDITABLE_STATUSES = {OrderStatus.ORDER_RECEIVED, OrderStatus.REQUIREMENTS_NOTED}
+
+# Statuses before which fabric has not been physically used yet (stock goes back by default on cancel).
+PRE_CUT_STATUSES = GARMENT_EDITABLE_STATUSES
 
 
 # Statuses that require the actor to provide a reason / comment.

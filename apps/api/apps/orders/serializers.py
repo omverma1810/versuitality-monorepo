@@ -107,7 +107,16 @@ class OrderListSerializer(serializers.ModelSerializer):
         return (timezone.now() - obj.created_at).days
 
     def get_next_statuses(self, obj):
-        return sorted(ALLOWED_TRANSITIONS.get(obj.status, set()))
+        """Only the steps the signed-in role may actually take (so the UI never offers a
+        button that would be refused). Without a request (live broadcasts) all steps are listed."""
+        from .transitions import can_transition
+
+        targets = sorted(ALLOWED_TRANSITIONS.get(obj.status, set()))
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        if user is None:
+            return targets
+        return [t for t in targets if can_transition(user, obj.status, t)]
 
 
 class OrderDetailSerializer(OrderListSerializer):
@@ -201,6 +210,43 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         return order
 
 
+class OrderUpdateSerializer(serializers.ModelSerializer):
+    """Partial edit. Status is deliberately absent: it only moves through the state machine."""
+
+    line_items = OrderLineItemSerializer(many=True, required=False)
+
+    class Meta:
+        model = Order
+        fields = (
+            'order_type',
+            'trial_date',
+            'delivery_date',
+            'advance',
+            'notes',
+            'measurement_set',
+            'line_items',
+        )
+        extra_kwargs = {f: {'required': False} for f in fields}
+
+    def validate_order_type(self, value):
+        if value not in {c.value for c in OrderType}:
+            raise serializers.ValidationError('Invalid order type.')
+        return value
+
+    def validate(self, attrs):
+        initial = getattr(self, 'initial_data', {}) or {}
+        if 'status' in initial:
+            raise serializers.ValidationError(
+                {'status': 'Status cannot be edited here. Use the status buttons or cancel the order.'}
+            )
+        return attrs
+
+
+class OrderCancelSerializer(serializers.Serializer):
+    reason = serializers.CharField(allow_blank=False, trim_whitespace=True)
+    return_fabric = serializers.BooleanField(required=False, allow_null=True, default=None)
+
+
 class OrderTransitionSerializer(serializers.Serializer):
     target = serializers.ChoiceField(choices=OrderStatus.choices)
     reason = serializers.CharField(required=False, allow_blank=True, default='')
@@ -211,6 +257,8 @@ __all__ = [
     'OrderDetailSerializer',
     'OrderCreateSerializer',
     'OrderTransitionSerializer',
+    'OrderUpdateSerializer',
+    'OrderCancelSerializer',
     'OrderLineItemSerializer',
     'OrderStatusEventSerializer',
     'PRODUCTION_FLOW',

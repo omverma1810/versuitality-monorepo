@@ -29,7 +29,8 @@ export type OrderStatus =
   | 'ready_for_qc'
   | 'qc_rejected'
   | 'ready_for_delivery'
-  | 'delivered';
+  | 'delivered'
+  | 'cancelled';
 
 export interface ApiHealth {
   status: 'ok';
@@ -262,6 +263,7 @@ export const ORDER_STATUSES: OrderStatus[] = [
   'qc_rejected',
   'ready_for_delivery',
   'delivered',
+  'cancelled',
 ];
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
@@ -275,6 +277,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   qc_rejected: 'QC rejected',
   ready_for_delivery: 'Ready for delivery',
   delivered: 'Delivered',
+  cancelled: 'Cancelled',
 };
 
 export type StatusTone =
@@ -283,7 +286,8 @@ export type StatusTone =
   | 'trial'
   | 'rejected'
   | 'ready'
-  | 'delivered';
+  | 'delivered'
+  | 'cancelled';
 
 export const ORDER_STATUS_TONE: Record<OrderStatus, StatusTone> = {
   order_received: 'received',
@@ -296,12 +300,16 @@ export const ORDER_STATUS_TONE: Record<OrderStatus, StatusTone> = {
   qc_rejected: 'rejected',
   ready_for_delivery: 'ready',
   delivered: 'delivered',
+  cancelled: 'cancelled',
 };
 
 export interface OrderLineItem {
   id?: string;
   garment_type: GarmentType;
   fabric_description?: string;
+  fabric?: string | null;
+  fabric_name?: string;
+  meters_used?: string | number | null;
   quantity: number;
   unit_price: string | number;
   customization_notes?: string;

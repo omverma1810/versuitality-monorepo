@@ -67,6 +67,27 @@ export async function transitionOrder(
   });
 }
 
+export interface OrderUpdatePayload {
+  order_type?: OrderType;
+  trial_date?: string | null;
+  delivery_date?: string | null;
+  advance?: string | number;
+  notes?: string;
+  measurement_set?: string | null;
+  line_items?: OrderLineItem[];
+}
+
+export async function updateOrder(id: string, payload: OrderUpdatePayload): Promise<Order> {
+  return api<Order>(`/api/orders/${id}/`, { method: 'PATCH', body: payload });
+}
+
+export async function cancelOrder(
+  id: string,
+  payload: { reason: string; return_fabric?: boolean },
+): Promise<Order> {
+  return api<Order>(`/api/orders/${id}/cancel/`, { method: 'POST', body: payload });
+}
+
 /** Open the order PDF in a new tab. The PDF endpoint requires auth. */
 export async function openOrderPdf(order: OrderListItem): Promise<void> {
   const access = useAuthStore.getState().access;

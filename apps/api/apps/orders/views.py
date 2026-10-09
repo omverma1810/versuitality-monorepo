@@ -18,11 +18,14 @@ from apps.realtime.broadcaster import order_created as broadcast_order_created
 from .models import ALLOWED_TRANSITIONS, PRODUCTION_FLOW, Order, OrderStatus
 from .pdf import render_order_pdf
 from .serializers import (
+    OrderCancelSerializer,
     OrderCreateSerializer,
     OrderDetailSerializer,
     OrderListSerializer,
     OrderTransitionSerializer,
+    OrderUpdateSerializer,
 )
+from .services import cancel_order, update_order
 from .transitions import transition_order
 
 
@@ -40,8 +43,9 @@ def _role_scope(qs, user):
 
 
 class OrderViewSet(viewsets.ModelViewSet):
-    """Orders are created and moved through the state machine only -- never
-    edited or deleted over the API (PUT/PATCH/DELETE would bypass the audit trail)."""
+    """Orders are created, edited (PATCH), cancelled and moved through the state machine.
+    Status itself only changes via /transition/ or /cancel/ -- never by editing -- and
+    nothing is ever deleted, so the audit trail stays complete."""
 
     queryset = Order.objects.select_related('client', 'created_by').prefetch_related(
         'line_items', 'status_events'
@@ -52,8 +56,9 @@ class OrderViewSet(viewsets.ModelViewSet):
     action_roles = {
         'transition': (Role.STAFF, Role.MASTER, Role.QA),  # exact rules in transitions.py
         'pdf': (Role.STAFF, Role.MASTER, Role.ACCOUNTANT),  # includes measurements
+        'cancel': (Role.STAFF,),
     }
-    http_method_names = ['get', 'post', 'head', 'options']
+    http_method_names = ['get', 'post', 'patch', 'head', 'options']
     lookup_field = 'pk'
 
     def get_queryset(self):
@@ -106,6 +111,30 @@ class OrderViewSet(viewsets.ModelViewSet):
             status=drf_status.HTTP_201_CREATED,
         )
 
+    def partial_update(self, request, *args, **kwargs):
+        order = self.get_object()
+        serializer = OrderUpdateSerializer(order, data=request.data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        order = update_order(order=order, actor=request.user, data=dict(serializer.validated_data))
+        order.refresh_from_db()
+        order.line_item_count = order.line_items.count()
+        return Response(OrderDetailSerializer(order, context={'request': request}).data)
+
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None):
+        order = self.get_object()
+        serializer = OrderCancelSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        cancel_order(
+            order=order,
+            actor=request.user,
+            reason=serializer.validated_data['reason'],
+            return_fabric=serializer.validated_data.get('return_fabric'),
+        )
+        order.refresh_from_db()
+        order.line_item_count = order.line_items.count()
+        return Response(OrderDetailSerializer(order, context={'request': request}).data)
+
     @action(detail=True, methods=['post'])
     def transition(self, request, pk=None):
         order = self.get_object()
@@ -151,7 +180,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         last_7 = scoped.filter(
             created_at__gte=timezone.now() - timedelta(days=7)
         ).count()
-        active = total - by_status.get(OrderStatus.DELIVERED, 0)
+        active = total - by_status.get(OrderStatus.DELIVERED, 0) - by_status.get(OrderStatus.CANCELLED, 0)
         return Response(
             {
                 'total': total,
@@ -160,7 +189,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                 'created_last_7_days': last_7,
                 'by_status': [
                     {'status': s, 'count': by_status.get(s, 0)}
-                    for s in PRODUCTION_FLOW + [OrderStatus.QC_REJECTED]
+                    for s in PRODUCTION_FLOW + [OrderStatus.QC_REJECTED, OrderStatus.CANCELLED]
                 ],
             }
         )

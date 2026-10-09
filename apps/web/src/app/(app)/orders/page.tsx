@@ -53,7 +53,7 @@ export default function OrdersPage() {
     const now = Date.now();
     for (const o of list) {
       byStatus.set(o.status, (byStatus.get(o.status) ?? 0) + 1);
-      if (o.status !== 'delivered') active += 1;
+      if (o.status !== 'delivered' && o.status !== 'cancelled') active += 1;
       if (
         o.status === 'delivered' &&
         o.delivered_at &&

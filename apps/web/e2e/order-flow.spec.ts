@@ -81,7 +81,7 @@ test.describe.serial('order lifecycle — client to delivery', () => {
     await passEveryItem(page);
     await page.getByRole('button', { name: /Pass — ready for delivery/ }).click();
     await page.getByRole('button', { name: 'Confirm pass' }).click();
-    await expect(page.getByText(/passed|ready for delivery|back to queue/i).first()).toBeVisible();
+    await page.waitForURL(/inspected=pass/);
   });
 
   test('staff hands the order over to the client', async ({ page }) => {
@@ -124,7 +124,8 @@ test('QA rejection sends the order back to the master with a reason', async ({ p
   await page.getByPlaceholder('Describe what needs to be redone').first().fill('Lapel roll uneven on the left');
   await page.getByRole('button', { name: /Reject — start rework/ }).click();
   await page.getByRole('button', { name: 'Confirm reject' }).click();
-  await expect(page.getByText(/rejected|rework|back to queue/i).first()).toBeVisible();
+  await page.waitForURL(/inspected=fail/); // the page moves to the order once the rejection is recorded
+  await expect(page.getByText(/gone back to the master for rework/i)).toBeVisible();
 
   const after = await apiCall<{ status: string }>('admin', 'GET', `/orders/${order.id}/`);
   expect(after.status).toBe('qc_rejected');

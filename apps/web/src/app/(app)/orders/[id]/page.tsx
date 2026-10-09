@@ -3,10 +3,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
+  Ban,
   Calendar,
   CheckCircle2,
   ClipboardCheck,
   Download,
+  Pencil,
   Phone,
   Receipt,
   Ruler,
@@ -28,7 +30,7 @@ import { Button } from '@/components/ui/button';
 import { useAuthGate } from '@/hooks/useAuthGate';
 import { ApiError } from '@/lib/api';
 import { fetchOrderNotifications } from '@/lib/notifications';
-import { getOrder, openOrderPdf, transitionOrder } from '@/lib/orders';
+import { cancelOrder, getOrder, openOrderPdf, transitionOrder } from '@/lib/orders';
 import { fetchChecklistItems, fetchInspections } from '@/lib/qa';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
@@ -55,19 +57,25 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [welcome, setWelcome] = useState(
-    search.get('welcome') === '1' || search.get('inspected') !== null,
+    search.get('welcome') === '1' || search.get('inspected') !== null || search.get('edited') === '1',
   );
   const welcomeMessage =
     search.get('inspected') === 'pass'
       ? 'Inspection passed — the order is ready for delivery.'
       : search.get('inspected') === 'fail'
         ? 'Inspection recorded — the order has gone back to the master for rework.'
-        : 'Order saved. The PDF receipt is ready to download.';
+        : search.get('edited') === '1'
+          ? 'Changes saved.'
+          : 'Order saved. The PDF receipt is ready to download.';
 
   const [transitionTarget, setTransitionTarget] = useState<OrderStatus | null>(null);
   const [reason, setReason] = useState('');
   const [transitioning, setTransitioning] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [returnFabric, setReturnFabric] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
 
   const [inspections, setInspections] = useState<QcInspection[]>([]);
   const [checklistItems, setChecklistItems] = useState<QcChecklistItemDef[]>([]);
@@ -141,6 +149,32 @@ export default function OrderDetailPage() {
       setError(e instanceof ApiError ? e.message : 'Could not update status.');
     } finally {
       setTransitioning(false);
+    }
+  }
+
+  const isFrontDesk = userRole === 'staff' || userRole === 'admin';
+  const isCancelled = order.status === 'cancelled';
+  const canEdit = isFrontDesk && !isCancelled;
+  const canCancel = isFrontDesk && order.status !== 'delivered' && !isCancelled;
+  const hasTrackedFabric = order.line_items.some((l) => l.fabric && Number(l.meters_used) > 0);
+  const preCut = order.status === 'order_received' || order.status === 'requirements_noted';
+
+  async function confirmCancel() {
+    if (!order || !cancelReason.trim()) return;
+    setCancelling(true);
+    setError(null);
+    try {
+      const updated = await cancelOrder(order.id, {
+        reason: cancelReason.trim(),
+        return_fabric: hasTrackedFabric ? returnFabric : undefined,
+      });
+      setOrder(updated);
+      setCancelOpen(false);
+      setCancelReason('');
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Could not cancel the order.');
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -235,6 +269,26 @@ export default function OrderDetailPage() {
                     </Button>
                   </Link>
                 )}
+              {canEdit && (
+                <Link href={`/orders/${order.id}/edit`}>
+                  <Button variant="secondary">
+                    <Pencil className="h-4 w-4" />
+                    Edit order
+                  </Button>
+                </Link>
+              )}
+              {canCancel && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setReturnFabric(preCut);
+                    setCancelOpen(true);
+                  }}
+                >
+                  <Ban className="h-4 w-4" />
+                  Cancel order
+                </Button>
+              )}
               <Button onClick={downloadPdf} loading={downloading} variant="secondary">
                 <Download className="h-4 w-4" />
                 PDF receipt
@@ -360,7 +414,9 @@ export default function OrderDetailPage() {
               <p className="rounded-xl border border-white/5 bg-white/[0.02] p-3 text-xs text-foreground/50">
                 {order.status === 'delivered'
                   ? 'This order is delivered. ✦'
-                  : 'No further transitions available from your role.'}
+                  : isCancelled
+                    ? 'This order was cancelled. No further steps are possible.'
+                    : 'No further transitions available from your role.'}
               </p>
             ) : (
               <div className="space-y-2">
@@ -457,6 +513,73 @@ export default function OrderDetailPage() {
                   disabled={!reason.trim()}
                 >
                   Apply
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {cancelOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => !cancelling && setCancelOpen(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-navy-900/70 px-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: 8 }}
+              transition={{ duration: 0.18 }}
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-label="Cancel order"
+              className="glass-panel w-full max-w-md p-6"
+            >
+              <p className="text-xs uppercase tracking-[0.2em] text-foreground/40">Cannot be undone</p>
+              <h2 className="font-display text-xl gold-text">Cancel {order.order_id}?</h2>
+              <p className="mt-2 text-sm text-foreground/60">
+                The order stays on record (with your reason) but leaves production, the dashboard counts and revenue.
+              </p>
+              <textarea
+                rows={3}
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Why is this order being cancelled?"
+                className="mt-4 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm outline-none placeholder:text-foreground/30 focus:border-gold-500/60 focus:bg-white/10"
+              />
+              {hasTrackedFabric && (
+                <label className="mt-3 flex items-start gap-2 text-sm text-foreground/70">
+                  <input
+                    type="checkbox"
+                    checked={returnFabric}
+                    onChange={(e) => setReturnFabric(e.target.checked)}
+                    className="mt-1 h-4 w-4 accent-gold-500"
+                  />
+                  <span>
+                    Return the fabric to stock
+                    <span className="block text-xs text-foreground/45">
+                      {preCut
+                        ? 'The cloth has not been cut yet.'
+                        : 'Cutting has started — untick if the cloth is already used.'}
+                    </span>
+                  </span>
+                </label>
+              )}
+              <div className="mt-5 flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setCancelOpen(false)}>
+                  Keep order
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={confirmCancel}
+                  loading={cancelling}
+                  disabled={!cancelReason.trim()}
+                >
+                  Cancel order
                 </Button>
               </div>
             </motion.div>

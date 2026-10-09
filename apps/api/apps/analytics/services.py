@@ -52,7 +52,7 @@ def resolve_range(params) -> tuple[date, date]:
 def _orders_in_range(frm: date, to: date):
     return Order.objects.filter(
         created_at__date__gte=frm, created_at__date__lte=to
-    )
+    ).exclude(status=OrderStatus.CANCELLED)
 
 
 # ---------------------------------------------------------------------------
@@ -76,6 +76,7 @@ def garment_breakdown(frm: date, to: date) -> list[dict]:
             order__created_at__date__gte=frm,
             order__created_at__date__lte=to,
         )
+        .exclude(order__status=OrderStatus.CANCELLED)
         .values('garment_type')
         .annotate(
             count=Coalesce(Sum('quantity'), 0),
@@ -201,7 +202,7 @@ def month_on_month() -> dict:
     def _bucket(start, end):
         agg = Order.objects.filter(
             created_at__date__gte=start, created_at__date__lte=end
-        ).aggregate(c=Count('id'), s=_zero_decimal_sum('subtotal'))
+        ).exclude(status=OrderStatus.CANCELLED).aggregate(c=Count('id'), s=_zero_decimal_sum('subtotal'))
         return {
             'count': agg['c'] or 0,
             'revenue': float(agg['s'] or 0),
@@ -223,7 +224,7 @@ def headline_kpis() -> dict:
     today = timezone.localdate()
     return {
         'active_clients': Client.objects.count(),
-        'active_orders': Order.objects.exclude(status=OrderStatus.DELIVERED).count(),
+        'active_orders': Order.objects.exclude(status__in=[OrderStatus.DELIVERED, OrderStatus.CANCELLED]).count(),
         'orders_today': Order.objects.filter(created_at__date=today).count(),
         'delivered_today': Order.objects.filter(delivered_at__date=today).count(),
     }

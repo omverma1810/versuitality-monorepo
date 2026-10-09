@@ -77,12 +77,12 @@ def test_role_matrix(api, row):
 
 @pytest.mark.parametrize('role', sorted(ALL))
 @pytest.mark.parametrize('method', ['put', 'patch', 'delete'])
-def test_orders_cannot_be_edited_or_deleted_over_the_api(api, order, role, method):
-    """PATCH {"status": ...} would bypass the state machine and the audit trail."""
+def test_status_cannot_be_forced_and_nothing_is_deleted_over_the_api(api, order, role, method):
+    """PATCH {"status": ...} would bypass the state machine and the audit trail; DELETE/PUT stay closed."""
     url = f'/api/orders/{order["id"]}/'
     payload = {'status': 'delivered'} if method != 'delete' else None
     resp = getattr(api[role], method)(url, payload, format='json')
-    assert resp.status_code in (403, 405)
+    assert resp.status_code in (400, 403, 405)  # 400: staff/admin may PATCH, but not the status
     assert api[Role.ADMIN].get(url).json()['status'] == 'order_received'
 
 

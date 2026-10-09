@@ -39,6 +39,7 @@ export function StatusTimeline({ events, current }: Props) {
 
   // QC rejected events sit out of the linear flow — list them separately.
   const rejections = events.filter((e) => e.to_status === 'qc_rejected');
+  const cancellation = events.find((e) => e.to_status === 'cancelled');
 
   return (
     <div className="space-y-3">
@@ -128,6 +129,25 @@ export function StatusTimeline({ events, current }: Props) {
           );
         })}
       </ol>
+
+      {cancellation && (
+        <div className="rounded-xl border border-white/15 bg-white/[0.04] p-3">
+          <p className="mb-1 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-foreground/60">
+            <span className="h-1.5 w-1.5 rounded-full bg-foreground/50" />
+            Order cancelled
+          </p>
+          <p className="text-xs text-foreground/80">
+            {new Date(cancellation.created_at).toLocaleString(undefined, {
+              day: '2-digit',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+            {cancellation.actor_name && <> · by {cancellation.actor_name}</>}
+            {cancellation.reason && <> · &ldquo;{cancellation.reason}&rdquo;</>}
+          </p>
+        </div>
+      )}
 
       {rejections.length > 0 && (
         <div className="rounded-xl border border-status-rejected/30 bg-status-rejected/10 p-3">
