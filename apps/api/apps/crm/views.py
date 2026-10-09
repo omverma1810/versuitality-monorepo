@@ -10,6 +10,7 @@ from apps.accounts.permissions import RoleMatrixPermission
 from apps.measurements.exports import build_measurement_workbook
 
 from .models import Client
+from .profile import build_profile
 from .serializers import ClientSerializer, ClientSummarySerializer
 from .utils import normalise_mobile
 
@@ -29,6 +30,7 @@ def _annotate(qs):
     return qs.annotate(
         measurement_count=Count('measurements', distinct=True),
         last_measurement_at=Max('measurements__created_at'),
+        order_count=Count('orders', distinct=True),
     )
 
 
@@ -67,15 +69,30 @@ class ClientViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def by_mobile(self, request):
-        """Used by the intake form to detect returning clients while typing."""
+        """Used while typing a number (intake, new order, appointments): is this an
+        existing customer? Matches the primary or the alternate number, in any format.
+        Returns the client plus a `profile` (latest measurements, recent orders)."""
         mobile = normalise_mobile(request.query_params.get('mobile', ''))
         if not mobile or len(mobile.lstrip('+')) < 7:
-            return Response({'match': None})
-        try:
-            client = _annotate(Client.objects.filter(mobile=mobile)).get()
-        except Client.DoesNotExist:
-            return Response({'match': None})
-        return Response({'match': ClientSerializer(client).data})
+            return Response({'match': None, 'profile': None})
+        client = (
+            _annotate(Client.objects.filter(Q(mobile=mobile) | Q(alt_mobile=mobile)))
+            .order_by('-created_at')
+            .first()
+        )
+        if client is None:
+            return Response({'match': None, 'profile': None, 'normalised': mobile})
+        return Response({
+            'match': ClientSerializer(client).data,
+            'profile': build_profile(client, context={'request': request}),
+            'matched_on': 'mobile' if client.mobile == mobile else 'alt_mobile',
+        })
+
+    @action(detail=True, methods=['get'])
+    def profile(self, request, pk=None):
+        """Snapshot used to pre-fill a new order for an existing customer."""
+        client = self.get_object()
+        return Response(build_profile(client, context={'request': request}))
 
     @action(detail=True, methods=['get'], url_path='measurements/export')
     def export_measurements(self, request, pk=None):

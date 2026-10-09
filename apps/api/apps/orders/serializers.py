@@ -122,7 +122,7 @@ class OrderListSerializer(serializers.ModelSerializer):
 class OrderDetailSerializer(OrderListSerializer):
     line_items = OrderLineItemSerializer(many=True, read_only=True)
     status_events = OrderStatusEventSerializer(many=True, read_only=True)
-    measurement_set = serializers.UUIDField(read_only=True)
+    measurement_set = serializers.UUIDField(source='measurement_set_id', read_only=True)
 
     class Meta(OrderListSerializer.Meta):
         fields = OrderListSerializer.Meta.fields + (

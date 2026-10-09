@@ -217,6 +217,34 @@ export type MeasurementKey =
 
 export type MeasurementValues = Partial<Record<MeasurementKey, string | number>>;
 
+export const MEASUREMENT_KEYS: MeasurementKey[] = [
+  'upper_length', 'upper_shoulder', 'upper_sleeve', 'upper_half_sleeve', 'upper_chest',
+  'upper_waist', 'upper_hip', 'upper_cuff', 'upper_collar', 'upper_arms',
+  'lower_length', 'lower_bottom', 'lower_knee', 'lower_waist', 'lower_hip',
+  'lower_seat_round', 'lower_inseam', 'lower_thigh',
+];
+
+export const MEASUREMENT_LABELS: Record<MeasurementKey, string> = {
+  upper_length: 'Length',
+  upper_shoulder: 'Shoulder',
+  upper_sleeve: 'Sleeve',
+  upper_half_sleeve: '½ Sleeve',
+  upper_chest: 'Chest',
+  upper_waist: 'Waist',
+  upper_hip: 'Hip',
+  upper_cuff: 'Cuff',
+  upper_collar: 'Collar',
+  upper_arms: 'Arms',
+  lower_length: 'Trouser length',
+  lower_bottom: 'Bottom',
+  lower_knee: 'Knee',
+  lower_waist: 'Trouser waist',
+  lower_hip: 'Trouser hip',
+  lower_seat_round: 'Seat round',
+  lower_inseam: 'Inseam',
+  lower_thigh: 'Thigh',
+};
+
 export interface MeasurementSet extends MeasurementValues {
   id: string;
   client: string;
@@ -633,4 +661,36 @@ export interface AnalyticsSummary {
   revenue_trend: RevenueTrendPoint[];
   stage_funnel: FunnelStage[];
   qc_stats: QcStats;
+}
+
+
+// ---------------------------------------------------------------------------
+// Returning-customer recognition
+// ---------------------------------------------------------------------------
+
+export interface RecentOrder {
+  id: string;
+  order_id: string;
+  status: OrderStatus;
+  order_type: OrderType;
+  created_at: string;
+  subtotal: string;
+  garment_summary: string;
+  line_items: OrderLineItem[];
+}
+
+export interface ClientProfile {
+  latest_measurement: MeasurementSet | null;
+  measurement_age_days: number | null;
+  order_count: number;
+  last_order_at: string | null;
+  last_visit_at: string | null;
+  recent_orders: RecentOrder[];
+}
+
+export interface MobileLookupResult {
+  match: Client | null;
+  profile: ClientProfile | null;
+  normalised?: string;
+  matched_on?: 'mobile' | 'alt_mobile';
 }

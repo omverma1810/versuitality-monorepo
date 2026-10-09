@@ -38,6 +38,22 @@ test.describe('editing an order', () => {
     expect(saved.notes).toBe('Client asked for working buttonholes');
   });
 
+  test('an order with linked measurements can be edited and keeps them', async ({ page }) => {
+    const client = await apiCall<{ id: string }>('staff', 'POST', '/clients/', { full_name: `Linked ${Date.now()}`, mobile: uniqueMobile() });
+    const ms = await apiCall<{ id: string }>('staff', 'POST', '/measurements/', { client: client.id, garment_types: ['shirt'], upper_chest: '40' });
+    const order = await apiCall<{ id: string }>('staff', 'POST', '/orders/', {
+      client: client.id, measurement_set: ms.id, order_type: 'full',
+      line_items: [{ garment_type: 'shirt', quantity: 1, unit_price: '5000' }],
+    });
+    await login(page, 'staff');
+    await page.goto(`/orders/${order.id}/edit`);
+    await expect(page.getByLabel('Measurement set')).toHaveValue(ms.id);
+    await page.locator('#order-notes').fill('Keeps its measurements');
+    await page.getByRole('button', { name: /save changes/i }).click();
+    await expect(page.getByText('Changes saved.')).toBeVisible();
+    expect((await apiCall<any>('admin', 'GET', `/orders/${order.id}/`)).measurement_set).toBe(ms.id);
+  });
+
   test('garments are locked once the master has started cutting', async ({ page }) => {
     const order = await newOrder();
     await apiCall('master', 'POST', `/orders/${order.id}/transition/`, { target: 'requirements_noted' });

@@ -341,3 +341,12 @@ def test_next_statuses_only_lists_steps_the_role_may_take(api, order):
     walk_to(api, oid, 'ready_for_delivery')
     assert api[S].get(f'/api/orders/{oid}/').json()['next_statuses'] == ['delivered']
     assert api[M].get(f'/api/orders/{oid}/').json()['next_statuses'] == []
+
+
+def test_order_detail_exposes_the_measurement_set_id_not_its_label(api, order, measurement):
+    """The edit page round-trips this value, so it must be the UUID."""
+    body = api[S].get(f'/api/orders/{order["id"]}/').json()
+    assert body['measurement_set'] == measurement['id']
+    # ...and an edit that sends it straight back is accepted.
+    assert api[S].patch(f'/api/orders/{order["id"]}/', {'measurement_set': body['measurement_set'], 'notes': 'ok'},
+                        format='json').status_code == 200

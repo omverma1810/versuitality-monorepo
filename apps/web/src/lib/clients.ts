@@ -1,6 +1,8 @@
 import type {
   Client,
+  ClientProfile,
   ClientSummary,
+  MobileLookupResult,
   PaginatedResponse,
 } from '@versuitality/types';
 
@@ -38,6 +40,14 @@ export async function searchClients(
 
 export async function getClient(id: string): Promise<Client> {
   return api<Client>(`/api/clients/${id}/`);
+}
+
+export async function lookupByMobile(mobile: string): Promise<MobileLookupResult> {
+  return api<MobileLookupResult>(`/api/clients/by_mobile/?mobile=${encodeURIComponent(mobile)}`);
+}
+
+export async function getClientProfile(id: string): Promise<ClientProfile> {
+  return api<ClientProfile>(`/api/clients/${id}/profile/`);
 }
 
 export async function clientByMobile(mobile: string): Promise<Client | null> {

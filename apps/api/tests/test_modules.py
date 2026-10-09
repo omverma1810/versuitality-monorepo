@@ -271,3 +271,64 @@ def test_audit_log_is_admin_only_and_records_activity(api, users):
         assert api[role].get('/api/audit/').status_code == 403
     assert api['anon'].get('/api/audit/').status_code == 401
     assert api[A].post('/api/audit/', {}, format='json').status_code == 405
+
+
+# ------------------------------------------------- returning-customer recognition
+def _line(**kw):
+    return {'garment_type': 'shirt', 'quantity': 1, 'unit_price': '1000', **kw}
+
+
+def test_by_mobile_returns_the_profile_needed_to_prefill_an_order(api, client_record, make_order):
+    older = api[S].post('/api/measurements/', {'client': client_record['id'], 'garment_types': ['shirt'],
+                                               'upper_chest': '40'}, format='json').json()
+    newest = api[S].post('/api/measurements/', {'client': client_record['id'], 'garment_types': ['suit'],
+                                                'upper_chest': '41', 'upper_waist': '35'}, format='json').json()
+    first = make_order(line_items=[_line(garment_type='suit', fabric_description='Navy wool', unit_price='30000',
+                                         customization_notes='Peak lapel')])
+    second = make_order(line_items=[_line(garment_type='shirt', quantity=2)])
+
+    body = api[S].get('/api/clients/by_mobile/', {'mobile': '98100 00001'}).json()
+    assert body['match']['id'] == client_record['id'] and body['matched_on'] == 'mobile'
+    profile = body['profile']
+    assert profile['latest_measurement']['id'] == newest['id'] != older['id']
+    assert profile['latest_measurement']['upper_chest'] == '41.00'
+    assert profile['measurement_age_days'] == 0 and profile['order_count'] == 2
+    assert [o['order_id'] for o in profile['recent_orders']] == [second['order_id'], first['order_id']]
+    repeat = profile['recent_orders'][1]['line_items'][0]
+    assert (repeat['garment_type'], repeat['fabric_description'], repeat['customization_notes']) == ('suit', 'Navy wool', 'Peak lapel')
+
+
+def test_by_mobile_also_recognises_the_alternate_number(api):
+    created = api[S].post('/api/clients/', {'full_name': 'Two Phones', 'mobile': '+919810000088',
+                                            'alt_mobile': '98100 00089'}, format='json')
+    assert created.status_code == 201, created.content
+    body = api[S].get('/api/clients/by_mobile/', {'mobile': '9810000089'}).json()
+    assert body['match']['full_name'] == 'Two Phones' and body['matched_on'] == 'alt_mobile'
+
+
+def test_by_mobile_for_a_new_number_and_for_a_half_typed_one(api):
+    fresh = api[S].get('/api/clients/by_mobile/', {'mobile': '9810099999'}).json()
+    assert fresh['match'] is None and fresh['profile'] is None and fresh['normalised'] == '+919810099999'
+    assert api[S].get('/api/clients/by_mobile/', {'mobile': '98100'}).json()['match'] is None
+
+
+def test_profile_ignores_cancelled_orders_and_works_without_history(api, client_record, make_order):
+    brand_new = api[S].post('/api/clients/', {'full_name': 'No History', 'mobile': '+919810000066'}, format='json').json()
+    empty = api[S].get(f'/api/clients/{brand_new["id"]}/profile/').json()
+    assert empty['latest_measurement'] is None and empty['recent_orders'] == [] and empty['order_count'] == 0
+    kept, dropped = make_order(), make_order()
+    api[S].post(f'/api/orders/{dropped["id"]}/cancel/', {'reason': 'x'}, format='json')
+    profile = api[S].get(f'/api/clients/{client_record["id"]}/profile/').json()
+    assert [o['order_id'] for o in profile['recent_orders']] == [kept['order_id']] and profile['order_count'] == 1
+
+
+def test_client_list_reports_the_real_order_count(api, client_record, make_order):
+    make_order(), make_order()
+    row = api[S].get('/api/clients/', {'search': 'aarav'}).json()['results'][0]
+    assert row['order_count'] == 2
+
+
+@pytest.mark.parametrize('role', [Q, C])
+def test_only_front_of_house_can_look_customers_up_by_mobile(api, client_record, role):
+    assert api[role].get('/api/clients/by_mobile/', {'mobile': '9810000001'}).status_code == 403
+    assert api[role].get(f'/api/clients/{client_record["id"]}/profile/').status_code == 403

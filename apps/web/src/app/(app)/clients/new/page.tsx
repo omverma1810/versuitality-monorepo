@@ -13,10 +13,11 @@ import {
   UserCircle2,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { PreferenceChips } from '@/components/clients/preference-chips';
+import { ReturningClientCard } from '@/components/clients/returning-client-card';
 import {
   EMPTY_FORM,
   MeasurementForm,
@@ -27,7 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Stepper } from '@/components/ui/stepper';
 import { useAuthGate } from '@/hooks/useAuthGate';
 import { ApiError } from '@/lib/api';
-import { clientByMobile, createClient } from '@/lib/clients';
+import { createClient, lookupByMobile } from '@/lib/clients';
 import { createMeasurement } from '@/lib/measurements';
 import {
   AGE_GROUP_LABELS,
@@ -35,6 +36,7 @@ import {
   OCCASION_LABELS,
   type AgeGroup,
   type Client,
+  type ClientProfile,
   type FabricPreference,
   type Occasion,
 } from '@versuitality/types';
@@ -81,16 +83,20 @@ const FABRIC_OPTIONS = (Object.keys(FABRIC_LABELS) as FabricPreference[]).map(
 
 export default function NewClientPage() {
   const router = useRouter();
+  const search = useSearchParams();
+  const startOrderAfter = search.get('next') === 'order';
   const { ready } = useAuthGate({ roles: ['admin', 'staff'] });
 
   const [step, setStep] = useState(0);
-  const [contact, setContact] = useState<ContactState>(EMPTY_CONTACT);
+  const [contact, setContact] = useState<ContactState>({ ...EMPTY_CONTACT, mobile: search.get('mobile') ?? '' });
   const [occasions, setOccasions] = useState<Occasion[]>([]);
   const [fabrics, setFabrics] = useState<FabricPreference[]>([]);
   const [notes, setNotes] = useState('');
   const [measurements, setMeasurements] = useState<MeasurementFormState>(EMPTY_FORM);
 
   const [returningClient, setReturningClient] = useState<Client | null>(null);
+  const [returningProfile, setReturningProfile] = useState<ClientProfile | null>(null);
+  const [matchedOnAlt, setMatchedOnAlt] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,13 +105,17 @@ export default function NewClientPage() {
     const m = contact.mobile.replace(/\D+/g, '');
     if (m.length < 7) {
       setReturningClient(null);
+      setReturningProfile(null);
       return;
     }
     let cancelled = false;
     const id = setTimeout(() => {
-      clientByMobile(contact.mobile)
-        .then((c) => {
-          if (!cancelled) setReturningClient(c);
+      lookupByMobile(contact.mobile)
+        .then((r) => {
+          if (cancelled) return;
+          setReturningClient(r.match);
+          setReturningProfile(r.profile);
+          setMatchedOnAlt(r.matched_on === 'alt_mobile');
         })
         .catch(() => undefined);
     }, 350);
@@ -119,7 +129,8 @@ export default function NewClientPage() {
 
   function canAdvance(): boolean {
     if (step === 0) {
-      return Boolean(contact.full_name.trim() && contact.mobile.trim().length >= 7);
+      // A number that already belongs to a customer must not become a second profile.
+      return Boolean(contact.full_name.trim() && contact.mobile.trim().length >= 7) && !returningClient;
     }
     if (step === 1) return true;
     if (step === 2) {
@@ -166,7 +177,7 @@ export default function NewClientPage() {
         ...numericKeys,
       });
 
-      router.replace(`/clients/${client.id}?welcome=1`);
+      router.replace((startOrderAfter ? `/orders/new?client=${client.id}` : `/clients/${client.id}?welcome=1`) as never);
     } catch (err) {
       if (err instanceof ApiError) {
         if (typeof err.data === 'object' && err.data) {
@@ -219,9 +230,19 @@ export default function NewClientPage() {
               <p className="mt-0.5 text-foreground/70">
                 {returningClient.full_name} · {returningClient.client_id}
               </p>
+              {matchedOnAlt && (
+                <p className="mt-0.5 text-foreground/50">Found by their alternate number.</p>
+              )}
+              <Link
+                href={`/orders/new?client=${returningClient.id}`}
+                className="mt-2 flex items-center gap-1 text-amber-200 hover:underline"
+              >
+                Start a new order for them
+                <ArrowRight className="h-3 w-3" />
+              </Link>
               <Link
                 href={`/clients/${returningClient.id}`}
-                className="mt-2 inline-flex items-center gap-1 text-amber-200 hover:underline"
+                className="mt-1 flex items-center gap-1 text-amber-200 hover:underline"
               >
                 Open profile
                 <ArrowRight className="h-3 w-3" />
@@ -337,6 +358,31 @@ export default function NewClientPage() {
                     </div>
                   </div>
                 </div>
+
+                {returningClient && returningProfile && (
+                  <div className="mt-6 space-y-3">
+                    <p role="alert" className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-2.5 text-sm text-amber-100">
+                      <b>{returningClient.full_name}</b> ({returningClient.client_id}) is already registered with this
+                      number, so no second profile is needed. Use their existing details below.
+                    </p>
+                    <ReturningClientCard
+                      clientId={returningClient.id}
+                      name={returningClient.full_name}
+                      profile={returningProfile}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <Link href={`/orders/new?client=${returningClient.id}`}>
+                        <Button>
+                          <ArrowRight className="h-4 w-4" />
+                          Start a new order for {returningClient.full_name.split(' ')[0]}
+                        </Button>
+                      </Link>
+                      <Link href={`/clients/${returningClient.id}`}>
+                        <Button variant="secondary">Open full profile</Button>
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </motion.section>
             )}
 

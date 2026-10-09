@@ -15,13 +15,14 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
+import { ReturningClientCard, STALE_MEASUREMENT_DAYS } from '@/components/clients/returning-client-card';
 import { ClientPicker } from '@/components/orders/client-picker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Stepper } from '@/components/ui/stepper';
 import { useAuthGate } from '@/hooks/useAuthGate';
 import { ApiError } from '@/lib/api';
-import { getClient } from '@/lib/clients';
+import { getClient, getClientProfile } from '@/lib/clients';
 import { listMeasurements } from '@/lib/measurements';
 import { listFabrics } from '@/lib/inventory';
 import { createOrder } from '@/lib/orders';
@@ -29,11 +30,13 @@ import { cn } from '@/lib/utils';
 import {
   GARMENT_LABELS,
   ORDER_TYPE_LABELS,
+  type ClientProfile,
   type ClientSummary,
   type Fabric,
   type GarmentType,
   type MeasurementSet,
   type OrderType,
+  type RecentOrder,
 } from '@versuitality/types';
 
 const STEPS = [
@@ -102,6 +105,46 @@ export default function NewOrderPage() {
   const [measurements, setMeasurements] = useState<MeasurementSet[]>([]);
   const [measurementId, setMeasurementId] = useState<string | null>(null);
   const [loadingMeasurements, setLoadingMeasurements] = useState(false);
+
+  // Returning customer: pull their latest measurements and recent orders as soon as they are known.
+  const [profile, setProfile] = useState<ClientProfile | null>(null);
+  const [repeatedFrom, setRepeatedFrom] = useState<string | null>(null);
+  useEffect(() => {
+    if (!client) {
+      setProfile(null);
+      setMeasurementId(null);
+      setRepeatedFrom(null);
+      return;
+    }
+    let cancelled = false;
+    getClientProfile(client.id)
+      .then((p) => {
+        if (cancelled) return;
+        setProfile(p);
+        // Pre-select the newest measurement set so the order is ready to go.
+        if (p.latest_measurement) setMeasurementId((prev) => prev ?? p.latest_measurement!.id);
+      })
+      .catch(() => !cancelled && setProfile(null));
+    return () => {
+      cancelled = true;
+    };
+  }, [client]);
+
+  function repeatOrder(o: RecentOrder) {
+    setLines(
+      o.line_items.map((li) => ({
+        garment_type: li.garment_type,
+        fabric_description: li.fabric_description ?? '',
+        fabric_id: li.fabric ?? null,
+        meters_used: li.meters_used && Number(li.meters_used) > 0 ? String(Number(li.meters_used)) : '',
+        quantity: li.quantity,
+        unit_price: String(Number(li.unit_price)),
+        customization_notes: li.customization_notes ?? '',
+      })),
+    );
+    setOrderType(o.order_type);
+    setRepeatedFrom(o.order_id);
+  }
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -236,8 +279,21 @@ export default function NewOrderPage() {
               >
                 <div className="glass-panel p-6">
                   <h2 className="mb-4 font-display text-xl">Client</h2>
-                  <ClientPicker selected={client} onSelect={setClient} />
+                  <ClientPicker selected={client} onSelect={setClient} registerNext="order" />
                 </div>
+
+                {client && profile && (
+                  <ReturningClientCard
+                    clientId={client.id}
+                    name={client.full_name}
+                    profile={profile}
+                    returnTo={`/orders/new?client=${client.id}`}
+                    onRepeat={(o) => {
+                      repeatOrder(o);
+                      setStep(1);
+                    }}
+                  />
+                )}
 
                 <div className="glass-panel p-6">
                   <h2 className="mb-4 font-display text-xl">Order type</h2>
@@ -280,6 +336,28 @@ export default function NewOrderPage() {
                 exit={{ opacity: 0, y: -8 }}
                 className="space-y-4"
               >
+                {repeatedFrom ? (
+                  <p
+                    role="status"
+                    className="rounded-xl border border-gold-500/30 bg-gold-500/10 px-4 py-2.5 text-sm text-gold-100"
+                  >
+                    Garments copied from <span className="font-mono">{repeatedFrom}</span>. Review the fabric, prices
+                    and notes below — nothing is saved until you create the order.
+                  </p>
+                ) : (
+                  profile &&
+                  profile.recent_orders.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm">
+                      <span className="text-foreground/60">Repeat a previous order:</span>
+                      {profile.recent_orders.map((o) => (
+                        <Button key={o.id} type="button" variant="secondary" size="sm" onClick={() => repeatOrder(o)}>
+                          {o.order_id} · {o.garment_summary || 'garments'}
+                        </Button>
+                      ))}
+                    </div>
+                  )
+                )}
+
                 <div className="glass-panel space-y-3 p-6">
                   <div className="flex items-center justify-between">
                     <h2 className="font-display text-xl">Garments</h2>
@@ -503,6 +581,12 @@ export default function NewOrderPage() {
                     Pick the measurement set for this visit. The PDF receipt and
                     the master tailor will reference these numbers.
                   </p>
+                  {profile?.latest_measurement && (profile.measurement_age_days ?? 0) >= STALE_MEASUREMENT_DAYS && (
+                    <p className="mb-4 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
+                      The latest measurements are {Math.round((profile.measurement_age_days ?? 0) / 30)} months old. Go
+                      back to the first step to take fresh ones (pre-filled from the last visit).
+                    </p>
+                  )}
                   {loadingMeasurements ? (
                     <div className="flex items-center gap-2 text-xs text-foreground/50">
                       <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gold-500/40 border-t-gold-500" />

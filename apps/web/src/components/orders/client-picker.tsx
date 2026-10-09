@@ -6,29 +6,73 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 import { Avatar } from '@/components/ui/avatar';
-import { searchClients } from '@/lib/clients';
+import { lookupByMobile, searchClients } from '@/lib/clients';
 import { cn } from '@/lib/utils';
 import type { ClientSummary } from '@versuitality/types';
 
 interface Props {
   selected: ClientSummary | null;
   onSelect: (c: ClientSummary | null) => void;
+  /** After registering a brand-new customer from here, continue to this flow. */
+  registerNext?: 'order';
 }
 
-export function ClientPicker({ selected, onSelect }: Props) {
+/** A complete phone number (not a name, ID or last-4 fragment). */
+function phoneDigits(q: string): string | null {
+  const t = q.trim();
+  if (!/^[+\d][\d\s\-+()]*$/.test(t)) return null;
+  const digits = t.replace(/\D/g, '');
+  return digits.length >= 10 ? digits : null;
+}
+
+export function ClientPicker({ selected, onSelect, registerNext }: Props) {
   const [q, setQ] = useState('');
+  const [unknownNumber, setUnknownNumber] = useState(false);
   const [results, setResults] = useState<ClientSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
 
   useEffect(() => {
     if (selected) return;
+    setUnknownNumber(false);
     if (!q.trim()) {
       setResults([]);
       return;
     }
     let cancelled = false;
     setLoading(true);
+    if (phoneDigits(q)) {
+      // A full phone number: recognise an existing customer straight away.
+      const id = setTimeout(() => {
+        lookupByMobile(q)
+          .then((r) => {
+            if (cancelled) return;
+            if (r.match) {
+              onSelectRef.current({
+                id: r.match.id,
+                client_id: r.match.client_id,
+                full_name: r.match.full_name,
+                mobile: r.match.mobile,
+                email: r.match.email,
+                created_at: r.match.created_at,
+              });
+              setQ('');
+              setResults([]);
+            } else {
+              setResults([]);
+              setUnknownNumber(true);
+            }
+          })
+          .catch(() => !cancelled && setResults([]))
+          .finally(() => !cancelled && setLoading(false));
+      }, 250);
+      return () => {
+        cancelled = true;
+        clearTimeout(id);
+      };
+    }
     const id = setTimeout(() => {
       searchClients(q)
         .then((r) => !cancelled && setResults(r))
@@ -81,7 +125,7 @@ export function ClientPicker({ selected, onSelect }: Props) {
           ref={inputRef}
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search by name, mobile, last 4 digits, or client ID…"
+          placeholder="Type the mobile number — or search by name, last 4 digits, or client ID…"
           className="h-11 w-full rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-3 text-sm outline-none transition-colors placeholder:text-foreground/30 focus:border-gold-500/40 focus:bg-white/[0.08]"
         />
       </div>
@@ -103,6 +147,18 @@ export function ClientPicker({ selected, onSelect }: Props) {
             </Link>
             .
           </p>
+        ) : unknownNumber ? (
+          <div className="space-y-2 px-3 py-3 text-sm">
+            <p className="text-foreground/80">
+              New customer — no one is registered with <span className="font-mono text-gold-200">{q.trim()}</span>.
+            </p>
+            <Link
+              href={`/clients/new?mobile=${encodeURIComponent(q.trim())}${registerNext ? `&next=${registerNext}` : ''}` as never}
+              className="inline-flex rounded-lg border border-gold-500/40 bg-gold-500/10 px-3 py-1.5 text-xs text-gold-200 hover:bg-gold-500/20"
+            >
+              Register this customer
+            </Link>
+          </div>
         ) : results.length === 0 ? (
           <p className="px-3 py-3 text-xs text-foreground/40">
             No clients match “{q}”. Try a different spelling or
