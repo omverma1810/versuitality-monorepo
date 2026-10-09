@@ -70,7 +70,7 @@ section('welcome', 'Welcome to Versuitality', `
   <div class="node staff">Ready for delivery<br/><small>after QA pass</small></div><span>&rarr;</span>
   <div class="node staff">Delivered<br/><small>Front desk</small></div>
 </div>
-<p class="small">If quality control rejects a garment, it goes back to the master (<i>QC rejected</i> &rarr; rework &rarr; <i>Ready for QC</i>) with the reason recorded. Each order gets an ID such as <b>VS-20261007-0007</b>: the date, then a running number.</p>
+<p class="small">An order can also be <b>cancelled</b> by the front desk before delivery; this is final and needs a reason. If quality control rejects a garment, it goes back to the master (<i>QC rejected</i> &rarr; rework &rarr; <i>Ready for QC</i>) with the reason recorded. Each order gets an ID such as <b>VS-20261007-0007</b>: the date, then a running number.</p>
 
 <h3>How this manual is organised</h3>
 <p>Part 1 follows one real visit from start to finish &mdash; <i>a client walks in and leaves with a confirmed order</i>. The chapters after it describe each role’s daily work. Every screen shown is from the live system (names and numbers are sample data).</p>
@@ -170,6 +170,23 @@ ${fig('c13-appointments-list')}
 <h3>Finding clients</h3>
 <p>Use the <b>Clients</b> page or the search bar at the top. You can search by name, any part of the mobile number, the last four digits, email, or the client ID.</p>
 ${fig('c14-clients-list')}
+
+<h3>Changing an order</h3>
+<p>Open the order and press <b>Edit order</b>. What can change depends on how far the garment has got:</p>
+<ul>
+<li><b>Before cutting starts</b> (<i>Order received</i> or <i>Requirements noted</i>): garments, prices, fabric, dates, payment, notes and the linked measurements. Fabric already deducted from stock is put back and re-deducted automatically.</li>
+<li><b>Once cutting has started:</b> garments are locked; dates, payment, notes and measurements can still change.</li>
+<li><b>After delivery:</b> you can still record payments and notes.</li>
+</ul>
+<p>The total and balance update as you type, the advance can never exceed the total, and every edit is written to the audit log (what changed, who and when).</p>
+${fig('e01-order-edit-cancel-buttons')}
+${fig('e02-order-edit-form')}
+${fig('e03-order-edited')}
+
+<h3>Cancelling an order</h3>
+<p>Press <b>Cancel order</b> and give a reason. If tracked fabric was used you can choose whether it goes back to stock (it does by default before cutting). A cancelled order is final: it stays on record with who cancelled it and why, but it leaves the production board, the active counts and the revenue figures. A delivered order cannot be cancelled.</p>
+${fig2('e04-order-cancel-dialog', 'e05-order-cancelled')}
+${note('Only front desk and administrators can edit or cancel orders. The master, quality control and finance never see these buttons.')}
 
 <h3>Delivering an order</h3>
 <p>When quality control passes a garment the order becomes <b>Ready for delivery</b> and the client is told to collect it. When the client takes the garment, open the order and press <b>Move to Delivered</b>. Only the front desk can do this.</p>
@@ -284,7 +301,7 @@ section('reference', 'Quick reference', `
 <tr><td>Dashboard</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
 <tr><td>Clients &amp; measurements</td><td>edit</td><td>edit</td><td>view</td><td>&ndash;</td><td>&ndash;</td></tr>
 <tr><td>Appointments</td><td>edit</td><td>edit</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td></tr>
-<tr><td>Create orders</td><td>&#10003;</td><td>&#10003;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td></tr>
+<tr><td>Create, edit, cancel orders</td><td>&#10003;</td><td>&#10003;</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td></tr>
 <tr><td>View orders</td><td>all</td><td>all</td><td>all</td><td>only in QC</td><td>all</td></tr>
 <tr><td>Production steps</td><td>any</td><td>requirements, delivery</td><td>&#10003;</td><td>&ndash;</td><td>&ndash;</td></tr>
 <tr><td>Quality inspection</td><td>&#10003;</td><td>&ndash;</td><td>&ndash;</td><td>&#10003;</td><td>&ndash;</td></tr>

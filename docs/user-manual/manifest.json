@@ -13,31 +13,31 @@
   },
   "a03-dashboard-staff": {
     "file": "a03-dashboard-staff.png",
-    "title": "Your dashboard \u2014 what needs attention today",
+    "title": "Your dashboard — what needs attention today",
     "section": "Front desk",
     "role": "staff"
   },
   "a04-appointments": {
     "file": "a04-appointments.png",
-    "title": "Appointments \u2014 the day at a glance",
+    "title": "Appointments — the day at a glance",
     "section": "Front desk",
     "role": "staff"
   },
   "a05-client-contact": {
     "file": "a05-client-contact.png",
-    "title": "Step 1 of 4 \u2014 contact details (the mobile number is the client\u2019s identity)",
+    "title": "Step 1 of 4 — contact details (the mobile number is the client’s identity)",
     "section": "Registering a client",
     "role": "staff"
   },
   "a06-client-preferences": {
     "file": "a06-client-preferences.png",
-    "title": "Step 2 of 4 \u2014 style preferences and notes",
+    "title": "Step 2 of 4 — style preferences and notes",
     "section": "Registering a client",
     "role": "staff"
   },
   "a07-measurements": {
     "file": "a07-measurements.png",
-    "title": "Step 3 of 4 \u2014 the measurement sheet (the figure highlights the point being measured)",
+    "title": "Step 3 of 4 — the measurement sheet (the figure highlights the point being measured)",
     "section": "Measurements",
     "role": "staff",
     "fullPage": false
@@ -50,67 +50,67 @@
   },
   "a09-client-review": {
     "file": "a09-client-review.png",
-    "title": "Step 4 of 4 \u2014 review before saving",
+    "title": "Step 4 of 4 — review before saving",
     "section": "Registering a client",
     "role": "staff"
   },
   "a10-client-profile": {
     "file": "a10-client-profile.png",
-    "title": "The client profile \u2014 ID, contact, preferences and measurement history",
+    "title": "The client profile — ID, contact, preferences and measurement history",
     "section": "Registering a client",
     "role": "staff"
   },
   "a11-client-measurements": {
     "file": "a11-client-measurements.png",
-    "title": "Measurement history \u2014 every visit is kept, newest first (with Excel export)",
+    "title": "Measurement history — every visit is kept, newest first (with Excel export)",
     "section": "Measurements",
     "role": "staff"
   },
   "a12-order-client": {
     "file": "a12-order-client.png",
-    "title": "Order step 1 \u2014 find the client by name, mobile or ID",
+    "title": "Order step 1 — find the client by name, mobile or ID",
     "section": "Creating an order",
     "role": "staff"
   },
   "a13-order-garments": {
     "file": "a13-order-garments.png",
-    "title": "Order step 2 \u2014 garments, fabric and price (tracked fabric is deducted from stock)",
+    "title": "Order step 2 — garments, fabric and price (tracked fabric is deducted from stock)",
     "section": "Creating an order",
     "role": "staff"
   },
   "a14-order-measurements": {
     "file": "a14-order-measurements.png",
-    "title": "Order step 3 \u2014 link the measurement set from this visit",
+    "title": "Order step 3 — link the measurement set from this visit",
     "section": "Creating an order",
     "role": "staff"
   },
   "a15-order-schedule": {
     "file": "a15-order-schedule.png",
-    "title": "Order step 3 \u2014 trial and delivery dates, advance paid, notes",
+    "title": "Order step 3 — trial and delivery dates, advance paid, notes",
     "section": "Creating an order",
     "role": "staff"
   },
   "a16-order-review": {
     "file": "a16-order-review.png",
-    "title": "Order step 4 \u2014 review the total and confirm",
+    "title": "Order step 4 — review the total and confirm",
     "section": "Creating an order",
     "role": "staff"
   },
   "a17-order-created": {
     "file": "a17-order-created.png",
-    "title": "Order confirmed \u2014 ID, garments, balance due and the full status timeline",
+    "title": "Order confirmed — ID, garments, balance due and the full status timeline",
     "section": "Creating an order",
     "role": "staff"
   },
   "a18-order-actions": {
     "file": "a18-order-actions.png",
-    "title": "The \u201cUpdate status\u201d panel only offers the steps your role may take",
+    "title": "The “Update status” panel only offers the steps your role may take",
     "section": "Creating an order",
     "role": "staff"
   },
   "a19-order-timeline-notified": {
     "file": "a19-order-timeline-notified.png",
-    "title": "The timeline records who moved the order, and the client\u2019s notifications are logged",
+    "title": "The timeline records who moved the order, and the client’s notifications are logged",
     "section": "Creating an order",
     "role": "staff",
     "fullPage": false
@@ -123,13 +123,13 @@
   },
   "b02-orders-board": {
     "file": "b02-orders-board.png",
-    "title": "The production board \u2014 every order, by stage, live",
+    "title": "The production board — every order, by stage, live",
     "section": "Workshop (master)",
     "role": "master"
   },
   "b03-order-master": {
     "file": "b03-order-master.png",
-    "title": "The order as the master sees it \u2014 only production steps are offered",
+    "title": "The order as the master sees it — only production steps are offered",
     "section": "Workshop (master)",
     "role": "master"
   },
@@ -141,31 +141,31 @@
   },
   "b05-ready-for-trial": {
     "file": "b05-ready-for-trial.png",
-    "title": "Ready for trial \u2014 the client is notified",
+    "title": "Ready for trial — the client is notified",
     "section": "Workshop (master)",
     "role": "master"
   },
   "b06-ready-for-qc": {
     "file": "b06-ready-for-qc.png",
-    "title": "Sent to quality control \u2014 the master cannot pass his own work",
+    "title": "Sent to quality control — the master cannot pass his own work",
     "section": "Workshop (master)",
     "role": "master"
   },
   "b07-inventory-master": {
     "file": "b07-inventory-master.png",
-    "title": "Fabric inventory \u2014 metres in stock, low-stock warnings",
+    "title": "Fabric inventory — metres in stock, low-stock warnings",
     "section": "Inventory",
     "role": "master"
   },
   "b08-fabric-ledger": {
     "file": "b08-fabric-ledger.png",
-    "title": "A fabric\u2019s movement ledger \u2014 every metre in or out, with the order it went to",
+    "title": "A fabric’s movement ledger — every metre in or out, with the order it went to",
     "section": "Inventory",
     "role": "master"
   },
   "b09-qc-queue": {
     "file": "b09-qc-queue.png",
-    "title": "The QC queue \u2014 only orders the master has marked \u201cReady for QC\u201d",
+    "title": "The QC queue — only orders the master has marked “Ready for QC”",
     "section": "Quality check",
     "role": "qa"
   },
@@ -183,7 +183,7 @@
   },
   "b12-qc-reject-confirm": {
     "file": "b12-qc-reject-confirm.png",
-    "title": "Confirm the rejection \u2014 the order goes back to the master",
+    "title": "Confirm the rejection — the order goes back to the master",
     "section": "Quality check",
     "role": "qa"
   },
@@ -195,7 +195,7 @@
   },
   "b14-order-qc-rejected": {
     "file": "b14-order-qc-rejected.png",
-    "title": "The rejected order \u2014 the QA reason is on the timeline and failed items are listed",
+    "title": "The rejected order — the QA reason is on the timeline and failed items are listed",
     "section": "Quality check",
     "role": "master",
     "fullPage": false
@@ -214,19 +214,19 @@
   },
   "b17-qc-pass-confirm": {
     "file": "b17-qc-pass-confirm.png",
-    "title": "Confirm the pass \u2014 the order becomes \u201cReady for delivery\u201d",
+    "title": "Confirm the pass — the order becomes “Ready for delivery”",
     "section": "Quality check",
     "role": "qa"
   },
   "b18-order-ready-for-delivery": {
     "file": "b18-order-ready-for-delivery.png",
-    "title": "Ready for delivery \u2014 only front desk can mark it delivered",
+    "title": "Ready for delivery — only front desk can mark it delivered",
     "section": "Delivery",
     "role": "staff"
   },
   "b19-order-delivered": {
     "file": "b19-order-delivered.png",
-    "title": "Delivered \u2014 the order is complete and the balance is settled",
+    "title": "Delivered — the order is complete and the balance is settled",
     "section": "Delivery",
     "role": "staff"
   },
@@ -238,19 +238,19 @@
   },
   "b21-orders-accountant": {
     "file": "b21-orders-accountant.png",
-    "title": "Orders \u2014 visible to finance, with no production controls",
+    "title": "Orders — visible to finance, with no production controls",
     "section": "Finance (accountant)",
     "role": "accountant"
   },
   "b22-order-accountant": {
     "file": "b22-order-accountant.png",
-    "title": "An order from finance\u2019s side \u2014 receipt and balance, no status buttons",
+    "title": "An order from finance’s side — receipt and balance, no status buttons",
     "section": "Finance (accountant)",
     "role": "accountant"
   },
   "b23-analytics": {
     "file": "b23-analytics.png",
-    "title": "Analytics \u2014 revenue trend, quality outcomes, orders by stage",
+    "title": "Analytics — revenue trend, quality outcomes, orders by stage",
     "section": "Finance (accountant)",
     "role": "accountant"
   },
@@ -262,31 +262,31 @@
   },
   "c01-dashboard-admin": {
     "file": "c01-dashboard-admin.png",
-    "title": "Owner dashboard \u2014 live counts, today\u2019s appointments, low stock, quick actions",
+    "title": "Owner dashboard — live counts, today’s appointments, low stock, quick actions",
     "section": "Administration",
     "role": "admin"
   },
   "c02-team": {
     "file": "c02-team.png",
-    "title": "Team & roles \u2014 everyone with access, their role, and whether they are active",
+    "title": "Team & roles — everyone with access, their role, and whether they are active",
     "section": "Administration",
     "role": "admin"
   },
   "c03-invite": {
     "file": "c03-invite.png",
-    "title": "Invite a teammate \u2014 pick their role",
+    "title": "Invite a teammate — pick their role",
     "section": "Administration",
     "role": "admin"
   },
   "c04-invite-link": {
     "file": "c04-invite-link.png",
-    "title": "A one-time setup link \u2014 send it to the new teammate",
+    "title": "A one-time setup link — send it to the new teammate",
     "section": "Administration",
     "role": "admin"
   },
   "c05-setup-password": {
     "file": "c05-setup-password.png",
-    "title": "The invitation page \u2014 choose a password (the link works only once)",
+    "title": "The invitation page — choose a password (the link works only once)",
     "section": "Administration",
     "role": "all"
   },
@@ -298,7 +298,7 @@
   },
   "c07-audit-log": {
     "file": "c07-audit-log.png",
-    "title": "The audit log \u2014 who did what, and when (admin only)",
+    "title": "The audit log — who did what, and when (admin only)",
     "section": "Administration",
     "role": "admin"
   },
@@ -316,31 +316,31 @@
   },
   "c10-fabric-new": {
     "file": "c10-fabric-new.png",
-    "title": "Add a fabric \u2014 supplier, colour, opening stock and pricing",
+    "title": "Add a fabric — supplier, colour, opening stock and pricing",
     "section": "Inventory",
     "role": "admin"
   },
   "c11-fabric-restock": {
     "file": "c11-fabric-restock.png",
-    "title": "Stock in / stock out \u2014 each movement is logged in the ledger",
+    "title": "Stock in / stock out — each movement is logged in the ledger",
     "section": "Inventory",
     "role": "admin"
   },
   "c12-appointment-new": {
     "file": "c12-appointment-new.png",
-    "title": "Book an appointment \u2014 consultation, measurement, trial or delivery",
+    "title": "Book an appointment — consultation, measurement, trial or delivery",
     "section": "Appointments",
     "role": "staff"
   },
   "c13-appointments-list": {
     "file": "c13-appointments-list.png",
-    "title": "The appointment list \u2014 upcoming visits at a glance",
+    "title": "The appointment list — upcoming visits at a glance",
     "section": "Appointments",
     "role": "staff"
   },
   "c14-clients-list": {
     "file": "c14-clients-list.png",
-    "title": "Clients \u2014 find anyone by name, mobile or ID",
+    "title": "Clients — find anyone by name, mobile or ID",
     "section": "Clients",
     "role": "staff"
   },
@@ -352,19 +352,19 @@
   },
   "c16-global-search": {
     "file": "c16-global-search.png",
-    "title": "Global search (Ctrl/\u2318 + K) \u2014 jump straight to a client",
+    "title": "Global search (Ctrl/⌘ + K) — jump straight to a client",
     "section": "Tips",
     "role": "all"
   },
   "c17-analytics-admin": {
     "file": "c17-analytics-admin.png",
-    "title": "Analytics \u2014 pick any date range and export to Excel",
+    "title": "Analytics — pick any date range and export to Excel",
     "section": "Administration",
     "role": "admin"
   },
   "m01-mobile-dashboard": {
     "file": "m01-mobile-dashboard.png",
-    "title": "On a phone \u2014 the dashboard with the bottom navigation bar",
+    "title": "On a phone — the dashboard with the bottom navigation bar",
     "section": "On your phone",
     "role": "staff"
   },
@@ -384,6 +384,36 @@
     "file": "a20-receipt.png",
     "title": "The printable PDF receipt",
     "section": "Creating an order",
+    "role": "staff"
+  },
+  "e01-order-edit-cancel-buttons": {
+    "file": "e01-order-edit-cancel-buttons.png",
+    "title": "Front desk and admins see “Edit order” and “Cancel order” on every order that is not finished",
+    "section": "Changing or cancelling an order",
+    "role": "staff"
+  },
+  "e02-order-edit-form": {
+    "file": "e02-order-edit-form.png",
+    "title": "The edit page: garments, price, dates, payment and notes (the new total is shown as you type)",
+    "section": "Changing or cancelling an order",
+    "role": "staff"
+  },
+  "e03-order-edited": {
+    "file": "e03-order-edited.png",
+    "title": "Saved — the total, balance and notes are updated and the change is recorded in the audit log",
+    "section": "Changing or cancelling an order",
+    "role": "staff"
+  },
+  "e04-order-cancel-dialog": {
+    "file": "e04-order-cancel-dialog.png",
+    "title": "Cancelling asks for a reason (and offers to return tracked fabric to stock)",
+    "section": "Changing or cancelling an order",
+    "role": "staff"
+  },
+  "e05-order-cancelled": {
+    "file": "e05-order-cancelled.png",
+    "title": "A cancelled order stays on record with who cancelled it and why, but leaves production and the revenue figures",
+    "section": "Changing or cancelling an order",
     "role": "staff"
   }
 }

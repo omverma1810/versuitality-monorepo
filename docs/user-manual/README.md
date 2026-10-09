@@ -1,6 +1,6 @@
 # Versuitality user manual
 
-`Versuitality-User-Manual.pdf` is the illustrated manual for the atelier's team (36 pages, 64 figures).
+`Versuitality-User-Manual.pdf` is the illustrated manual for the atelier's team (39 pages, 69 figures).
 Everything here is generated from the running application, so it can be refreshed whenever the UI changes.
 
 | File | What it is |
@@ -29,7 +29,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 pnpm build && pnpm start &
 
 # 3. record (screenshots + videos land in docs/user-manual/)
 export WALKTHROUGH_PASSWORD='choose-one'
-for part in a-client-journey b-workshop c-admin d-ops; do node e2e-manual/part-$part.mjs; done
+for part in a-client-journey b-workshop c-admin d-ops e-edit-cancel; do node e2e-manual/part-$part.mjs; done
 python e2e-manual/grab_receipt.py            # needs: pip install pymupdf
 
 # 4. build the PDF (needs: pip install pymupdf pillow)
