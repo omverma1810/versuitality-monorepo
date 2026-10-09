@@ -153,6 +153,35 @@ ${fig2('a18-order-actions', 'a19-order-timeline-notified')}
 ${note('Customer messages (WhatsApp and email) are generated for each status change and shown in the <i>Notifications</i> list on the order. They are delivered to the client as soon as your messaging accounts are connected; until then they are only logged.')}
 `);
 
+// ------------------------------------------------------------ Returning customers
+section('returning', 'Returning customers: recognised by their mobile number', `
+${who('Staff', 'Admin')}
+<p>When someone who has visited before walks in again, the number is all you need. Type it <b>in any format</b> (<i>98100 10001</i>, <i>09810010001</i>, <i>+91 98100-10001</i>) and Versuitality recognises the customer instantly &mdash; no searching, no second profile, and no re-typing of what the atelier already knows.</p>
+
+<h3>Starting a new order for a returning customer</h3>
+${steps(
+  'Open <b>Orders &rarr; New order</b> and type the customer&rsquo;s mobile number in the first box. The alternate number on file works too.',
+  'The customer is selected automatically and a <b>Welcome back</b> card appears with their <b>latest measurements</b> (and how long ago they were taken), how many orders they have placed, when they last visited, and their <b>previous orders</b>.',
+  'Press <b>Repeat</b> on an earlier order to copy its garments, fabric, quantities, prices and customisation notes into the new order. Review and adjust &mdash; nothing is saved until you press <b>Create order</b>.',
+  'On the measurements step the <b>newest measurement set is already linked</b>. Keep it, or choose another from the history.',
+)}
+${fig('f01-returning-found')}
+${fig2('f02-repeat-order', 'f03-measurements-linked')}
+${note('Cancelled orders are never offered for repeating. If the latest measurements are more than six months old, the card shows a reminder to offer a quick re-measure.')}
+
+<h3>Re-measuring a returning customer</h3>
+<p>Press <b>Update measurements (pre-filled)</b> on the Welcome back card. The measurement form opens <b>pre-filled from the last visit</b>, so you only change what is different today. The earlier set is never overwritten &mdash; the history keeps every visit &mdash; and when you save you return straight to the order you were writing.</p>
+${fig('f06-measurements-prefilled')}
+
+<h3>New customers and duplicates</h3>
+<ul>
+<li><b>A number that is not on file</b> shows &ldquo;New customer&rdquo; with a <b>Register this customer</b> button. The number is carried across, and after registering you continue straight into the order with the new customer selected.</li>
+<li><b>Registering an existing number is blocked.</b> If someone types a number that already belongs to a customer, Versuitality says so, shows their details and offers <b>Start a new order</b> or <b>Open full profile</b> instead &mdash; one person, one profile.</li>
+</ul>
+${fig2('f04-new-customer', 'f05-duplicate-blocked')}
+${tip('The same recognition works when booking an appointment and in the search bar at the top (Ctrl / &#8984; + K).')}
+`);
+
 // -------------------------------------------------------------- 4. Front desk
 section('frontdesk', 'Front desk (Staff)', `
 ${who('Staff', 'Admin')}

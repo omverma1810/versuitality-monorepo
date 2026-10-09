@@ -415,5 +415,41 @@
     "title": "A cancelled order stays on record with who cancelled it and why, but leaves production and the revenue figures",
     "section": "Changing or cancelling an order",
     "role": "staff"
+  },
+  "f01-returning-found": {
+    "file": "f01-returning-found.png",
+    "title": "Type the mobile number and the customer is recognised: profile, latest measurements and previous orders load automatically",
+    "section": "Returning customers",
+    "role": "staff"
+  },
+  "f02-repeat-order": {
+    "file": "f02-repeat-order.png",
+    "title": "Repeat order: the earlier garments, fabric, prices and notes are copied for review — nothing is saved until you confirm",
+    "section": "Returning customers",
+    "role": "staff"
+  },
+  "f03-measurements-linked": {
+    "file": "f03-measurements-linked.png",
+    "title": "The latest measurement set is pre-selected — no need to measure again unless the client has changed",
+    "section": "Returning customers",
+    "role": "staff"
+  },
+  "f04-new-customer": {
+    "file": "f04-new-customer.png",
+    "title": "An unknown number offers “Register this customer” and carries the number across",
+    "section": "Returning customers",
+    "role": "staff"
+  },
+  "f05-duplicate-blocked": {
+    "file": "f05-duplicate-blocked.png",
+    "title": "Registering a number that already belongs to a customer is blocked and points to their profile",
+    "section": "Returning customers",
+    "role": "staff"
+  },
+  "f06-measurements-prefilled": {
+    "file": "f06-measurements-prefilled.png",
+    "title": "Taking new measurements starts from the previous visit; the earlier set stays on record",
+    "section": "Returning customers",
+    "role": "staff"
   }
 }
