@@ -46,7 +46,7 @@ if ! gcloud artifacts repositories describe "$AR_REPO" --location "$REGION" >/de
     --description "Versuitality API images (CI/CD)"
 fi
 
-say "Cleanup policy: keep only the $KEEP most recent versions, delete everything older"
+say "Cleanup policy: keep only the $KEEP_IMAGES most recent versions, delete everything older"
 POLICY_FILE="$(mktemp)"
 cat > "$POLICY_FILE" <<JSON
 [
@@ -117,7 +117,7 @@ gcloud iam service-accounts add-iam-policy-binding "$DEPLOY_SA" \
 
 PROVIDER_PATH="$(gcloud iam workload-identity-pools providers describe "$PROVIDER" --location global --workload-identity-pool "$POOL" --format='value(name)')"
 
-say "Optional: first prune right now (keeps the newest $KEEP images and revisions)"
+say "Optional: first prune right now (keeps the newest $KEEP_IMAGES images and revisions)"
 if gcloud run services describe "$SERVICE" --region "$REGION" >/dev/null 2>&1; then
   PROJECT_ID="$PROJECT_ID" REGION="$REGION" SERVICE="$SERVICE" AR_REPO="$AR_REPO" KEEP_IMAGES="$KEEP_IMAGES" \
     bash "$(dirname "${BASH_SOURCE[0]}")/prune-images.sh" || echo "  (prune skipped)"
