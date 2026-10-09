@@ -34,10 +34,21 @@ DEPLOY_SA="${DEPLOY_SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 RUNTIME_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 
 say "Enabling the APIs the pipeline needs"
-gcloud services enable \
-  iam.googleapis.com iamcredentials.googleapis.com sts.googleapis.com \
-  cloudresourcemanager.googleapis.com artifactregistry.googleapis.com \
-  run.googleapis.com secretmanager.googleapis.com >/dev/null
+WANTED="iam.googleapis.com iamcredentials.googleapis.com sts.googleapis.com cloudresourcemanager.googleapis.com artifactregistry.googleapis.com run.googleapis.com secretmanager.googleapis.com"
+ENABLED="$(gcloud services list --enabled --format='value(config.name)' 2>/dev/null || true)"
+MISSING=""
+for api in $WANTED; do echo "$ENABLED" | grep -qx "$api" || MISSING="$MISSING $api"; done
+if [ -z "$MISSING" ]; then
+  echo "  all required APIs are already enabled"
+else
+  # Google rate-limits API enablement (HTTP 429); retry politely.
+  for attempt in 1 2 3 4 5 6; do
+    # shellcheck disable=SC2086
+    if gcloud services enable $MISSING >/dev/null 2>&1; then echo "  enabled:$MISSING"; break; fi
+    [ "$attempt" = 6 ] && die "Could not enable:$MISSING (rate-limited?). Wait a few minutes and re-run."
+    echo "  rate-limited, retrying in 30s (attempt $attempt/6)..."; sleep 30
+  done
+fi
 
 # --------------------------------------------------------------- Artifact Registry
 say "Artifact Registry repository '$AR_REPO' (Docker) in $REGION"
