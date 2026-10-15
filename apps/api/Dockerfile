@@ -1,6 +1,6 @@
 # Production image for the Versuitality API (Cloud Run).
 # Local development uses Dockerfile.dev via docker-compose.
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
